@@ -1,0 +1,36 @@
+{
+  "cache_miss_c1": {
+    "requests": 300,
+    "concurrency": 1,
+    "errors": 0,
+    "p50_ms": 3.6544500035233796,
+    "p95_ms": 4.799769981764257,
+    "p99_ms": 5.259217037819317,
+    "throughput_rps": 264.4663069865485
+  },
+  "cache_hit_c1": {
+    "requests": 300,
+    "concurrency": 1,
+    "errors": 0,
+    "p50_ms": 1.5425001038238406,
+    "p95_ms": 1.6916600696276876,
+    "p99_ms": 2.0977420220151544,
+    "throughput_rps": 655.6545836889242
+  },
+  "cache_miss_c8": {
+    "requests": 400,
+    "concurrency": 8,
+    "errors": 0,
+    "p50_ms": 20.038649963680655,
+    "p95_ms": 27.82899500452913,
+    "p99_ms": 31.646356079727408,
+    "throughput_rps": 391.70340847345
+  },
+  "environment": {
+    "python": "3.13.12",
+    "machine": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "cpus": 20,
+    "uvicorn_workers": 1,
+    "client": "same machine, keep-alive"
+  }
+}

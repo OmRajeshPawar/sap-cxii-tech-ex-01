@@ -1,0 +1,10 @@
+{
+  "model": "fashion_siglip",
+  "description": "open_clip Marqo-FashionSigLIP",
+  "device": "cpu",
+  "dims": 768,
+  "images_embedded": 29861,
+  "image_seconds": 2697.8,
+  "exported_dims": 64,
+  "pca": "sklearn PCA, random_state=0"
+}

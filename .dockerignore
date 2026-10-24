@@ -1,0 +1,13 @@
+# The image needs only what the Dockerfile copies; keep the build context small
+.cache/
+.venv*/
+.git/
+.github/
+.pytest_cache/
+**/__pycache__/
+tests/
+tools/
+analysis/
+*.md
+!README.md
+docs/

@@ -1,0 +1,191 @@
+{
+  "rule": "smallest MU within 1 point of the best substitute share; gain >= 1 point with 95% CI above zero, on choose and again on confirm",
+  "check_with_category": {
+    "queries": 100,
+    "rows": {
+      "0.0": {
+        "good_at_5": 0.688,
+        "bad_at_5": 0.032,
+        "gain_over_0": null,
+        "changed_results_share": 0.0
+      },
+      "0.05": {
+        "good_at_5": 0.688,
+        "bad_at_5": 0.030000000000000006,
+        "gain_over_0": {
+          "delta": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "share_boot_le_0": 1.0
+        },
+        "changed_results_share": 0.006000000000000001
+      },
+      "0.1": {
+        "good_at_5": 0.688,
+        "bad_at_5": 0.030000000000000006,
+        "gain_over_0": {
+          "delta": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "share_boot_le_0": 1.0
+        },
+        "changed_results_share": 0.01
+      },
+      "0.15": {
+        "good_at_5": 0.69,
+        "bad_at_5": 0.030000000000000006,
+        "gain_over_0": {
+          "delta": 0.002,
+          "ci95": [
+            0.0,
+            0.006000000000000001
+          ],
+          "share_boot_le_0": 0.3855
+        },
+        "changed_results_share": 0.012000000000000002
+      }
+    }
+  },
+  "choose_without_category": {
+    "queries": 60,
+    "rows": {
+      "0.0": {
+        "good_at_5": 0.5533333333333332,
+        "bad_at_5": 0.1,
+        "gain_over_0": null,
+        "changed_results_share": 0.0
+      },
+      "0.05": {
+        "good_at_5": 0.5933333333333333,
+        "bad_at_5": 0.08333333333333333,
+        "gain_over_0": {
+          "delta": 0.04000000000000001,
+          "ci95": [
+            0.009999999999999998,
+            0.07666666666666667
+          ],
+          "share_boot_le_0": 0.0035
+        },
+        "changed_results_share": 0.09333333333333332
+      },
+      "0.1": {
+        "good_at_5": 0.6033333333333334,
+        "bad_at_5": 0.08333333333333333,
+        "gain_over_0": {
+          "delta": 0.05,
+          "ci95": [
+            0.013333333333333334,
+            0.09341666666666622
+          ],
+          "share_boot_le_0": 0.0025
+        },
+        "changed_results_share": 0.12000000000000001
+      },
+      "0.15": {
+        "good_at_5": 0.6099999999999999,
+        "bad_at_5": 0.08000000000000002,
+        "gain_over_0": {
+          "delta": 0.05666666666666667,
+          "ci95": [
+            0.019999999999999997,
+            0.10333333333333333
+          ],
+          "share_boot_le_0": 0.0005
+        },
+        "changed_results_share": 0.12666666666666668
+      }
+    },
+    "chosen": 0.1,
+    "passes": true
+  },
+  "confirm_without_category": {
+    "queries": 100,
+    "rows": {
+      "0.0": {
+        "good_at_5": 0.544,
+        "bad_at_5": 0.11800000000000001,
+        "gain_over_0": null,
+        "changed_results_share": 0.0
+      },
+      "0.1": {
+        "good_at_5": 0.564,
+        "bad_at_5": 0.106,
+        "gain_over_0": {
+          "delta": 0.02,
+          "ci95": [
+            0.0020000000000000005,
+            0.041999999999999996
+          ],
+          "share_boot_le_0": 0.0105
+        },
+        "changed_results_share": 0.07600000000000001
+      }
+    },
+    "passes": true
+  },
+  "replication_second_sample_60": {
+    "queries": 60,
+    "rows": {
+      "0.0": {
+        "good_at_5": 0.5033333333333333,
+        "bad_at_5": 0.09000000000000002,
+        "gain_over_0": null,
+        "changed_results_share": 0.0
+      },
+      "0.1": {
+        "good_at_5": 0.5333333333333333,
+        "bad_at_5": 0.09000000000000001,
+        "gain_over_0": {
+          "delta": 0.029999999999999995,
+          "ci95": [
+            -1.8503717077085942e-18,
+            0.06666666666666667
+          ],
+          "share_boot_le_0": 0.032
+        },
+        "changed_results_share": 0.09000000000000001
+      }
+    }
+  },
+  "pooled_without_category": {
+    "queries": 242,
+    "mu": 0.1,
+    "gain_over_0": {
+      "delta": 0.027272727272727275,
+      "ci95": [
+        0.011570247933884299,
+        0.04380165289256198
+      ],
+      "share_boot_le_0": 0.0
+    }
+  },
+  "shipped_name_penalty": 0.1,
+  "replication_random_without_category": {
+    "queries": 25,
+    "rows": {
+      "0.0": {
+        "good_at_5": 0.528,
+        "bad_at_5": 0.128,
+        "gain_over_0": null,
+        "changed_results_share": 0.0
+      },
+      "0.1": {
+        "good_at_5": 0.528,
+        "bad_at_5": 0.128,
+        "gain_over_0": {
+          "delta": 0.0,
+          "ci95": [
+            0.0,
+            0.0
+          ],
+          "share_boot_le_0": 1.0
+        },
+        "changed_results_share": 0.064
+      }
+    }
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "labelled_pairs": 199,
+  "queries": 94,
+  "labelled_results_per_system": {
+    "text_only": 118,
+    "weights_only": 119,
+    "served": 126
+  },
+  "substitute_share": {
+    "text_only": 0.8728813559322034,
+    "weights_only": 0.9663865546218487,
+    "served": 0.9682539682539683
+  },
+  "substitute_or_partial_share": {
+    "text_only": 0.9491525423728814,
+    "weights_only": 0.9915966386554622,
+    "served": 0.9920634920634921
+  },
+  "served_minus_text_only": {
+    "delta": 0.09537261232176486,
+    "ci95": [
+      0.034810673968367276,
+      0.1626026105815139
+    ]
+  },
+  "served_minus_weights_only": {
+    "delta": 0.0018674136321195078,
+    "ci95": [
+      -0.02984652574496414,
+      0.03332796217706701
+    ]
+  }
+}

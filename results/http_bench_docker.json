@@ -1,0 +1,36 @@
+{
+  "cache_miss_c1": {
+    "requests": 300,
+    "concurrency": 1,
+    "errors": 0,
+    "p50_ms": 2.815538500001935,
+    "p95_ms": 3.184544650007126,
+    "p99_ms": 3.7322411800055018,
+    "throughput_rps": 347.2311151968921
+  },
+  "cache_hit_c1": {
+    "requests": 300,
+    "concurrency": 1,
+    "errors": 0,
+    "p50_ms": 1.5417100000050254,
+    "p95_ms": 1.8206165500025406,
+    "p99_ms": 1.9293583800103415,
+    "throughput_rps": 631.2685373452692
+  },
+  "cache_miss_c8": {
+    "requests": 400,
+    "concurrency": 8,
+    "errors": 0,
+    "p50_ms": 23.18071399999866,
+    "p95_ms": 37.78564920000347,
+    "p99_ms": 64.9980589900052,
+    "throughput_rps": 313.17064931822904
+  },
+  "environment": {
+    "python": "3.12.15",
+    "machine": "x86_64",
+    "cpus": 2,
+    "uvicorn_workers": 1,
+    "client": "same machine, keep-alive, Docker image"
+  }
+}

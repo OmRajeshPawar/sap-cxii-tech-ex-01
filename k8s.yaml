@@ -1,0 +1,63 @@
+# Local cluster:  docker build -t product-similarity:<model_version> .
+#                 kind load docker-image product-similarity:<model_version>   (or: minikube image load ...)
+#                 kubectl apply -f k8s.yaml && kubectl port-forward svc/product-similarity 8000:80
+# <model_version> is config/manifest.json["model_version"]. Tag each image with it and never reuse a tag;
+# in a real registry, deploy by digest (image: registry/product-similarity@sha256:...).
+# Rollback = point `image` back at the previous version's tag and re-apply (kubectl rollout undo works too).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: product-similarity
+  labels: {app: product-similarity}
+spec:
+  replicas: 2
+  strategy:
+    rollingUpdate: {maxUnavailable: 0, maxSurge: 1}   # a new version takes traffic only once it is ready
+  selector:
+    matchLabels:
+      app: product-similarity
+  template:
+    metadata:
+      labels:
+        app: product-similarity
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: /metrics
+        prometheus.io/port: "8000"
+    spec:
+      terminationGracePeriodSeconds: 20
+      securityContext: {runAsNonRoot: true, runAsUser: 10001}
+      containers:
+        - name: api
+          image: product-similarity:7cc290f4fc29   # = config/manifest.json model_version
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8000
+          env:
+            - name: SEARCH_MODE      # "exact" (default) or "hnsw"
+              value: exact
+          resources:
+            requests: {cpu: "250m", memory: "512Mi"}
+            limits: {cpu: "1", memory: "1Gi"}
+          securityContext: {allowPrivilegeEscalation: false, readOnlyRootFilesystem: true}
+          startupProbe:    # data load + feature build takes a few seconds; no traffic until done
+            httpGet: {path: /health, port: 8000}
+            periodSeconds: 2
+            failureThreshold: 60
+          readinessProbe:  # 503 while degraded: a pod not serving the evaluated model gets no traffic
+            httpGet: {path: /ready, port: 8000}
+            periodSeconds: 5
+          livenessProbe:   # trivial on purpose: a bad artifact set should stop traffic, not restart-loop the pod
+            httpGet: {path: /health, port: 8000}
+            periodSeconds: 15
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: product-similarity
+spec:
+  selector:
+    app: product-similarity
+  ports:
+    - port: 80
+      targetPort: 8000

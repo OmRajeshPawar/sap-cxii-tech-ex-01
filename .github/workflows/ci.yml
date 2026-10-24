@@ -1,0 +1,78 @@
+name: ci
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: pip install -r requirements-dev.txt
+      - run: python -m pytest -q
+      - name: Artifacts match the committed manifest
+        run: |
+          python -c "from simsearch.manifest import verify; v = verify(); print(v); assert v['verified'], v"
+
+  docker:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - run: docker build -t product-similarity:ci .
+      - name: Smoke-test the container
+        run: |
+          docker run -d -p 8000:8000 --name svc product-similarity:ci
+          for i in $(seq 1 30); do curl -sf localhost:8000/health && break; sleep 2; done
+          id=$(python3 -c "import json,zipfile;z=zipfile.ZipFile('data/archive.zip');print(json.loads(z.open(z.namelist()[0]).readline())['uniq_id'])")
+          curl -sf "localhost:8000/find_similar_products?product_id=$id&num_similar=5"
+          test "$(curl -s -o /dev/null -w '%{http_code}' 'localhost:8000/find_similar_products?product_id=nope')" = "404"
+          curl -sf localhost:8000/api/status | python3 -c "import json,sys; s=json.load(sys.stdin); print(s); assert s['manifest_verified'] and not s['degraded']"
+          curl -sf localhost:8000/ready
+          curl -sf localhost:8000/metrics | grep similarity_requests_total
+          curl -sf localhost:8000/ | grep -q "Similar Products"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Benchmark the container over HTTP
+        run: |
+          pip install -r requirements.txt
+          python tools/http_bench.py --url http://localhost:8000 --out results/http_bench_docker.json
+          { echo '### Docker image latency (GitHub runner, 1 uvicorn worker)'; echo '```json'; cat results/http_bench_docker.json; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: http-bench-docker
+          path: results/http_bench_docker.json
+      - name: Container logs on failure
+        if: failure()
+        run: docker logs svc
+
+  kubernetes:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: ci
+      - name: Deploy k8s.yaml to a kind cluster and call the service
+        run: |
+          tag=$(python3 -c "import json;print(json.load(open('config/manifest.json'))['model_version'])")
+          grep -q "product-similarity:$tag" k8s.yaml
+          docker build -t product-similarity:$tag .
+          kind load docker-image product-similarity:$tag --name ci
+          kubectl apply -f k8s.yaml
+          kubectl rollout status deployment/product-similarity --timeout=240s
+          kubectl get pods -o wide
+          kubectl port-forward svc/product-similarity 8080:80 &
+          for i in $(seq 1 30); do curl -sf localhost:8080/ready && break; sleep 2; done
+          id=$(python3 -c "import json,zipfile;z=zipfile.ZipFile('data/archive.zip');print(json.loads(z.open(z.namelist()[0]).readline())['uniq_id'])")
+          curl -sf "localhost:8080/find_similar_products?product_id=$id&num_similar=5"
+          test "$(curl -s -o /dev/null -w '%{http_code}' 'localhost:8080/find_similar_products?product_id=nope')" = "404"
+      - name: Cluster state on failure
+        if: failure()
+        run: kubectl describe pods; kubectl logs -l app=product-similarity --tail=100

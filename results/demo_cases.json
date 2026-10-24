@@ -1,0 +1,22 @@
+{
+  "cases": [
+    {
+      "id": "2852dde03bc410bd2c8cf09db9ff674c",
+      "title": "Why the type penalty exists",
+      "teaser": "A T-shirt that would recommend jeans",
+      "note": "Without the type penalty, the first result for this striped T-shirt is \"RUF & TUF Men's Slim Fit Jeans\": shoppers buy them together, and the weights are learned from co-purchases. Grouping by exact name alone would also show 1 extra size of a product already listed. The served model subtracts 0.15 when a result's known category differs and shows one listing per product, so #1 is \"Indian Terrain Men's Striped Regular Fit T-Shirt\". Press \"No type penalty\" and the jeans come back to #1."
+    },
+    {
+      "id": "887b423781da9d0ff5df19cc9624fa0d",
+      "title": "A strong match",
+      "teaser": "Five alternatives, one bought with it",
+      "note": "A held-out test query (not used for tuning or validation). All five results are in the same category as the query, and \"BILOCHI'S Women's Rayon Hand Block Gold Printed Palazzo(Size\" is one shoppers actually bought with it. The bars show the photo and the text doing most of the work."
+    },
+    {
+      "id": "074e23e699a3e623aa22496a395bc4c2",
+      "title": "Missing data: no photo",
+      "teaser": "What happens when the strongest signal is absent",
+      "note": "This listing has no photo, and the photo carries the largest weight (0.40). Its image block is all zeros, so the photo adds nothing to any score and the ranking falls back to what it does have: text, brand, price, list price, rating, weight. Nothing is re-weighted, so a listing is never rewarded for having less data. Move every weight except Image to 0: the API answers 422 instead of returning products ranked on nothing."
+    }
+  ]
+}

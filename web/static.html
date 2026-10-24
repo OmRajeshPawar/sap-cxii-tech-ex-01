@@ -1,0 +1,358 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Similar Products · Static Demo</title>
+<style>
+:root {
+  --bg: #f5f6f8; --panel: #ffffff; --ink: #14171f; --muted: #5d6472; --line: #e3e6ec; --soft: #eef1f6;
+  --accent: #2456e6; --accent-soft: #e8eefd; --ok: #13795b; --ok-soft: #e3f4ee; --warn: #b4401f; --warn-soft: #fbeae4;
+  --b-text: #3b6ff5; --b-image: #d9468a; --b-brand: #f08a24; --b-price: #1c9b62; --b-list_price: #7cc4a0;
+  --b-colour: #8b5cf6; --b-rating: #e2b31b; --b-weight: #8a94a6; --b-pen: #c0392b;
+  --shadow: 0 1px 2px rgba(20,23,31,.05), 0 4px 14px rgba(20,23,31,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0f1218; --panel: #171b23; --ink: #e9ecf2; --muted: #9aa3b2; --line: #272d38; --soft: #1e2430;
+    --accent: #6d93ff; --accent-soft: #1d2741; --ok: #4fd1a1; --ok-soft: #13291f; --warn: #ff8a65; --warn-soft: #33201a;
+    --shadow: none;
+  }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink);
+  font: 14px/1.45 "Segoe UI", system-ui, -apple-system, Roboto, sans-serif; }
+button, input, select { font: inherit; color: inherit; }
+.wrap { max-width: 1320px; margin: 0 auto; padding: 0 20px 48px; }
+
+header { position: sticky; top: 0; z-index: 20; background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px); border-bottom: 1px solid var(--line); }
+.bar { max-width: 1320px; margin: 0 auto; padding: 14px 20px; display: flex; gap: 16px; align-items: center; }
+.brand { display: flex; flex-direction: column; min-width: 210px; }
+.brand b { font-size: 16px; letter-spacing: -.01em; }
+.brand span { font-size: 12px; color: var(--muted); }
+.search { position: relative; flex: 1; }
+.search input { width: 100%; height: 42px; padding: 0 14px 0 40px; border: 1px solid var(--line); border-radius: 10px;
+  background: var(--panel); outline: none; box-shadow: var(--shadow); }
+.search input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+.search svg { position: absolute; left: 13px; top: 12px; width: 18px; height: 18px; color: var(--muted); }
+.kbd { position: absolute; right: 10px; top: 10px; font-size: 11px; color: var(--muted); border: 1px solid var(--line);
+  border-radius: 5px; padding: 1px 6px; background: var(--soft); }
+.suggest { position: absolute; left: 0; right: 0; top: 48px; background: var(--panel); border: 1px solid var(--line);
+  border-radius: 12px; box-shadow: 0 12px 32px rgba(0,0,0,.14); overflow: hidden; display: none; max-height: 70vh; overflow-y: auto; }
+.suggest.open { display: block; }
+.sg { display: grid; grid-template-columns: 44px 1fr auto; gap: 10px; align-items: center; padding: 7px 12px; cursor: pointer; }
+.sg:hover, .sg.on { background: var(--accent-soft); }
+.sg img, .sg .ph { width: 44px; height: 44px; object-fit: contain; background: #fff; border-radius: 6px; }
+.sg .t { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sg .m { font-size: 12px; color: var(--muted); }
+.sg .p { font-weight: 600; font-size: 13px; }
+.sg-empty { padding: 14px; color: var(--muted); }
+.btn { height: 42px; padding: 0 16px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel);
+  cursor: pointer; box-shadow: var(--shadow); white-space: nowrap; }
+.btn:hover { border-color: var(--accent); }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+.chip { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px; background: var(--panel); white-space: nowrap; }
+.chip b { color: var(--ink); font-weight: 600; }
+
+.layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; margin-top: 20px; align-items: start; }
+.panel { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow); }
+.query { position: sticky; top: 86px; padding: 16px; }
+.query .ph-big, .query img { width: 100%; height: 300px; object-fit: contain; background: #fff; border-radius: 10px; }
+.label { font-size: 11px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 700; }
+.query h2 { font-size: 16px; line-height: 1.35; margin: 12px 0 8px; }
+.facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 12px; font-size: 13px; }
+.facts dt { color: var(--muted); }
+.facts dd { margin: 0; }
+.idline { margin-top: 10px; font: 11px ui-monospace, Consolas, monospace; color: var(--muted); word-break: break-all; }
+
+.toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.seg { display: inline-flex; background: var(--soft); border: 1px solid var(--line); border-radius: 10px; padding: 3px; }
+.seg button { border: 0; background: transparent; padding: 6px 14px; border-radius: 7px; cursor: pointer; color: var(--muted); }
+.seg button.on { background: var(--panel); color: var(--ink); box-shadow: var(--shadow); font-weight: 600; }
+.legend { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--muted); }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.meta { font-size: 12px; color: var(--muted); margin: -4px 0 12px; }
+
+.grid { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 10px; cursor: pointer;
+  display: flex; flex-direction: column; gap: 6px; transition: border-color .12s, transform .12s; position: relative; }
+.card:hover { border-color: var(--accent); transform: translateY(-1px); }
+.card img, .card .ph { width: 100%; height: 150px; object-fit: contain; background: #fff; border-radius: 8px; }
+.ph, .ph-big { display: flex; align-items: center; justify-content: center; color: #8a94a6; font-size: 12px; background: #fff; }
+.rank { position: absolute; top: 14px; left: 14px; background: var(--ink); color: var(--panel); font-size: 11px; font-weight: 700;
+  border-radius: 6px; padding: 1px 7px; }
+.name { font-size: 13px; line-height: 1.3; height: 34px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
+.row { display: flex; justify-content: space-between; align-items: baseline; font-size: 12px; color: var(--muted); gap: 6px; }
+.row .pr { color: var(--ink); font-weight: 600; }
+.tag { font-size: 11px; border-radius: 6px; padding: 1px 7px; align-self: flex-start; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tag.same { background: var(--ok-soft); color: var(--ok); }
+.tag.diff { background: var(--soft); color: var(--muted); }
+.tag.unk { background: var(--soft); color: var(--muted); }
+.stack { display: flex; height: 7px; border-radius: 99px; overflow: hidden; background: var(--soft); }
+.stack span { display: block; height: 100%; }
+.score { display: flex; justify-content: space-between; font-size: 12px; }
+.score b { font-variant-numeric: tabular-nums; }
+.tip { position: fixed; z-index: 50; background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+  box-shadow: 0 10px 28px rgba(0,0,0,.18); padding: 10px 12px; font-size: 12px; pointer-events: none; display: none; min-width: 190px; }
+.tip div { display: flex; justify-content: space-between; gap: 14px; }
+.tip i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px; }
+
+.compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.col h3 { font-size: 13px; margin: 0 0 8px; display: flex; justify-content: space-between; }
+.li { display: grid; grid-template-columns: 24px 52px 1fr; gap: 10px; align-items: center; padding: 7px 8px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--panel); margin-bottom: 6px; cursor: pointer; }
+.li:hover { border-color: var(--accent); }
+.li img, .li .ph { width: 52px; height: 52px; object-fit: contain; background: #fff; border-radius: 6px; }
+.li .n { font-size: 12.5px; line-height: 1.3; }
+.li .s { font-size: 11.5px; color: var(--muted); }
+.li.both { box-shadow: inset 3px 0 0 var(--accent); }
+.li .r { font-weight: 700; color: var(--muted); text-align: right; }
+
+.browse { margin-top: 28px; padding: 16px; }
+.browse-head { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.browse-head h3 { margin: 0; font-size: 15px; }
+select { height: 36px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); padding: 0 10px; max-width: 320px; }
+.bgrid { display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 10px; }
+.bgrid .card img, .bgrid .card .ph { height: 110px; }
+.bgrid .name { height: 32px; font-size: 12px; }
+.pager { display: flex; gap: 8px; align-items: center; justify-content: flex-end; margin-top: 12px; font-size: 12px; color: var(--muted); }
+.empty { padding: 60px 20px; text-align: center; color: var(--muted); }
+footer { margin-top: 28px; font-size: 12px; color: var(--muted); line-height: 1.6; }
+
+@media (max-width: 1100px) { .grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } .bgrid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; } .query { position: static; } .query img, .query .ph-big { height: 220px; }
+  .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } .compare { grid-template-columns: 1fr; }
+  .bgrid { grid-template-columns: repeat(3, minmax(0, 1fr)); } .brand { display: none; } .bar { flex-wrap: wrap; }
+  .browse-head > div { width: 100%; } .browse-head select { flex: 1; min-width: 0; } .wrap { padding: 0 16px 40px; } .bar { padding: 12px 16px; }
+}
+</style>
+</head>
+<body>
+<header>
+  <div class="bar">
+    <div class="brand"><b>Similar Products</b><span>Every answer, no install · 30,000 listings</span></div>
+    <div class="search">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input id="q" type="search" autocomplete="off" spellcheck="false" placeholder="Search the catalogue: striped t-shirt, silk saree, men's formal shirt…">
+      <span class="kbd">/</span>
+      <div class="suggest" id="suggest"></div>
+    </div>
+    <button class="btn" id="random">Random product</button>
+    <span class="chip" id="version"></span>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="layout">
+    <aside class="panel query" id="query"><div class="empty">Search or pick a product.</div></aside>
+    <main>
+      <div class="toolbar">
+        <div class="seg" id="mode">
+          <button data-m="served" class="on">Served model</button>
+          <button data-m="base">Text-only baseline</button>
+          <button data-m="compare">Side by side</button>
+        </div>
+        <div class="legend" id="legend"></div>
+      </div>
+      <div class="meta" id="meta"></div>
+      <div id="results"></div>
+    </main>
+  </div>
+
+  <section class="panel browse">
+    <div class="browse-head">
+      <h3>Browse the catalogue</h3>
+      <div style="display:flex;gap:8px;align-items:center">
+        <select id="cat"></select>
+        <button class="btn" id="shuffle" style="height:36px">Shuffle</button>
+      </div>
+    </div>
+    <div class="bgrid" id="bgrid"></div>
+    <div class="pager"><span id="pinfo"></span><button class="btn" id="prev" style="height:30px">Prev</button><button class="btn" id="next" style="height:30px">Next</button></div>
+  </section>
+
+  <footer id="foot"></footer>
+</div>
+<div class="tip" id="tip"></div>
+
+<script id="data" type="application/json">__DATA__</script>
+<script>
+"use strict";
+const D = JSON.parse(document.getElementById("data").textContent);
+const N = D.names.length, K = D.k, NB = D.blocks.length;
+function bytes(s) { const b = atob(s), a = new Uint8Array(b.length); for (let i = 0; i < b.length; i++) a[i] = b.charCodeAt(i); return a.buffer; }
+const TOP = new Uint16Array(bytes(D.top)), BASE = new Uint16Array(bytes(D.base));
+const SCORE = new Int16Array(bytes(D.score)), PARTS = new Uint8Array(bytes(D.parts));
+const LABEL = { text: "Text", image: "Photo", brand: "Brand", price: "Price", list_price: "List price", colour: "Colour", rating: "Rating", weight: "Weight" };
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const lower = D.names.map((n) => n.toLowerCase());
+const byId = new Map(D.ids.map((id, i) => [id, i]));
+const catName = (i) => D.cat[i] ? D.catList[D.cat[i] - 1].replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2") : "";
+const brandName = (i) => D.brand[i] ? D.brandList[D.brand[i] - 1] : "";
+const price = (i) => D.price[i] ? "₹" + D.price[i].toLocaleString("en-IN") : "";
+const imgUrl = (i) => !D.img[i] ? "" : (D.img[i].startsWith("http") ? D.img[i] : D.imgPrefix + D.img[i]);
+const pic = (i, cls) => imgUrl(i) ? `<img loading="lazy" src="${esc(imgUrl(i))}" alt="" onerror="this.outerHTML='<div class=\\'${cls}\\'>no photo</div>'">` : `<div class="${cls}">no photo</div>`;
+
+let current = -1, mode = "served";
+
+// ---------- search ----------
+let hits = [], sel = 0, timer = 0;
+function search(text) {
+  const words = text.toLowerCase().split(/\s+/).filter(Boolean);
+  if (!words.length) return [];
+  const out = [];
+  for (let i = 0; i < N && out.length < 400; i++) {
+    const s = lower[i];
+    if (words.every((w) => s.includes(w))) out.push(i);
+  }
+  // shorter names first (closer to what was typed), one row per distinct name
+  const seen = new Set();
+  return out.sort((a, b) => lower[a].length - lower[b].length)
+    .filter((i) => !seen.has(lower[i]) && seen.add(lower[i])).slice(0, 12);
+}
+function renderSuggest() {
+  const box = $("suggest");
+  if (!$("q").value.trim()) { box.classList.remove("open"); return; }
+  box.innerHTML = hits.length ? hits.map((i, k) => `<div class="sg${k === sel ? " on" : ""}" data-i="${i}">${pic(i, "ph")}
+    <div style="min-width:0"><div class="t">${esc(D.names[i])}</div><div class="m">${esc([brandName(i), catName(i)].filter(Boolean).join(" · "))}</div></div>
+    <div class="p">${price(i)}</div></div>`).join("") : `<div class="sg-empty">No product name contains all of those words.</div>`;
+  box.classList.add("open");
+}
+$("q").addEventListener("input", () => {
+  clearTimeout(timer);
+  timer = setTimeout(() => { hits = search($("q").value); sel = 0; renderSuggest(); }, 60);
+});
+$("q").addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown") { sel = Math.min(sel + 1, hits.length - 1); renderSuggest(); e.preventDefault(); }
+  else if (e.key === "ArrowUp") { sel = Math.max(sel - 1, 0); renderSuggest(); e.preventDefault(); }
+  else if (e.key === "Enter") { hits = search($("q").value); if (hits.length) choose(hits[Math.min(sel, hits.length - 1)]); }
+  else if (e.key === "Escape") { $("suggest").classList.remove("open"); }
+});
+$("suggest").addEventListener("mousedown", (e) => { const el = e.target.closest(".sg"); if (el) choose(+el.dataset.i); });
+document.addEventListener("click", (e) => { if (!e.target.closest(".search")) $("suggest").classList.remove("open"); });
+document.addEventListener("keydown", (e) => { if (e.key === "/" && document.activeElement !== $("q")) { $("q").focus(); e.preventDefault(); } });
+
+// ---------- results ----------
+function choose(i) {
+  current = i;
+  $("suggest").classList.remove("open");
+  $("q").blur();
+  try { history.replaceState(null, "", "#" + D.ids[i]); } catch (e) { /* file:// in some browsers */ }
+  render();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+function typeTag(q, r) {
+  if (!D.cat[q] || !D.cat[r]) return `<span class="tag unk">${esc(catName(r) || "no category")}</span>`;
+  return D.cat[q] === D.cat[r] ? `<span class="tag same">✓ ${esc(catName(r))}</span>` : `<span class="tag diff">${esc(catName(r))}</span>`;
+}
+function stack(q, j) {
+  const o = (q * K + j) * (NB + 1);
+  return `<div class="stack">${D.blocks.map((b, k) => PARTS[o + k] ? `<span style="width:${PARTS[o + k] / 2.5}%;background:var(--b-${b})"></span>` : "").join("")}</div>`;
+}
+function renderQuery(i) {
+  const r = D.rating[i] ? (D.rating[i] / 10).toFixed(1) + " ★" : "–";
+  $("query").innerHTML = `<div class="label">Query product</div>${pic(i, "ph-big")}<h2>${esc(D.names[i])}</h2>
+    <dl class="facts"><dt>Brand</dt><dd>${esc(brandName(i) || "unknown")}</dd><dt>Price</dt><dd>${price(i) || "–"}</dd>
+    <dt>Rating</dt><dd>${r}</dd><dt>Type</dt><dd>${esc(catName(i) || "no category in the data")}</dd></dl>
+    <div class="idline">uniq_id ${esc(D.ids[i])}</div>`;
+}
+function card(q, r, j, withScore) {
+  const sc = withScore ? `<div class="score"><span>score</span><b>${(SCORE[q * K + j] / 10000).toFixed(3)}</b></div>${stack(q, j)}` : "";
+  return `<div class="card" data-i="${r}" data-q="${q}" data-j="${withScore ? j : -1}"><span class="rank">#${j + 1}</span>${pic(r, "ph")}
+    <div class="name" title="${esc(D.names[r])}">${esc(D.names[r])}</div>${typeTag(q, r)}
+    <div class="row"><span>${esc(brandName(r) || "brand unknown")}</span><span class="pr">${price(r)}</span></div>${sc}</div>`;
+}
+function li(q, r, j, other) {
+  return `<div class="li${other.has(r) ? " both" : ""}" data-i="${r}"><div class="r">${j + 1}</div>${pic(r, "ph")}
+    <div><div class="n">${esc(D.names[r])}</div><div class="s">${typeTag(q, r)} ${price(r)}</div></div></div>`;
+}
+function render() {
+  const q = current;
+  if (q < 0) return;
+  renderQuery(q);
+  const served = Array.from(TOP.subarray(q * K, q * K + K)), base = Array.from(BASE.subarray(q * K, q * K + K));
+  const known = (list) => list.filter((r) => D.cat[q] && D.cat[r]);
+  const sameShare = (list) => { const k = known(list); return k.length ? Math.round(100 * k.filter((r) => D.cat[r] === D.cat[q]).length / k.length) + "%" : "n/a"; };
+  if (mode === "compare") {
+    const a = new Set(served), b = new Set(base);
+    $("meta").textContent = `Left: the served model. Right: TF-IDF on name and category only. A blue edge marks a product both lists contain (${served.filter((r) => b.has(r)).length} of ${K}).`;
+    $("results").innerHTML = `<div class="compare">
+      <div class="col"><h3><span>Served model</span><span class="chip">same type <b>${sameShare(served)}</b></span></h3>${served.map((r, j) => li(q, r, j, b)).join("")}</div>
+      <div class="col"><h3><span>Text-only baseline</span><span class="chip">same type <b>${sameShare(base)}</b></span></h3>${base.map((r, j) => li(q, r, j, a)).join("")}</div></div>`;
+  } else {
+    const list = mode === "served" ? served : base;
+    $("meta").textContent = mode === "served"
+      ? `Top ${K} from the served model: learned weights over 8 attributes, one listing per product, and a type penalty (${D.penalty}). Hover a card to see what each attribute added.`
+      : `Top ${K} by TF-IDF on name and category only: the baseline the served model is measured against.`;
+    $("results").innerHTML = `<div class="grid">${list.map((r, j) => card(q, r, j, mode === "served")).join("")}</div>`;
+  }
+}
+$("results").addEventListener("click", (e) => { const el = e.target.closest("[data-i]"); if (el) choose(+el.dataset.i); });
+$("mode").addEventListener("click", (e) => {
+  const b = e.target.closest("button"); if (!b) return;
+  mode = b.dataset.m;
+  for (const x of $("mode").children) x.classList.toggle("on", x === b);
+  render();
+});
+
+// ---------- score breakdown on hover ----------
+$("results").addEventListener("mousemove", (e) => {
+  const el = e.target.closest(".card"); const tip = $("tip");
+  if (!el || +el.dataset.j < 0) { tip.style.display = "none"; return; }
+  const q = +el.dataset.q, j = +el.dataset.j, o = (q * K + j) * (NB + 1);
+  const rows = D.blocks.map((b, k) => [b, PARTS[o + k] / 250]).filter((x) => x[1] > 0).sort((a, b) => b[1] - a[1]);
+  const pen = PARTS[o + NB] / 250;
+  tip.innerHTML = rows.map(([b, v]) => `<div><span><i style="background:var(--b-${b})"></i>${LABEL[b]}</span><b>+${v.toFixed(3)}</b></div>`).join("")
+    + (pen ? `<div><span><i style="background:var(--b-pen)"></i>Type penalty</span><b>−${pen.toFixed(3)}</b></div>` : "")
+    + `<div style="border-top:1px solid var(--line);margin-top:4px;padding-top:4px"><span>Score</span><b>${(SCORE[q * K + j] / 10000).toFixed(3)}</b></div>`;
+  tip.style.display = "block";
+  const x = Math.min(e.clientX + 16, innerWidth - tip.offsetWidth - 8), y = Math.min(e.clientY + 16, innerHeight - tip.offsetHeight - 8);
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+});
+$("results").addEventListener("mouseleave", () => { $("tip").style.display = "none"; });
+
+// ---------- browse ----------
+const counts = new Map();
+for (let i = 0; i < N; i++) counts.set(D.cat[i], (counts.get(D.cat[i]) || 0) + 1);
+const cats = [...counts.keys()].filter((c) => c).sort((a, b) => counts.get(b) - counts.get(a));
+$("cat").innerHTML = `<option value="-1">All products (${N.toLocaleString()})</option>` +
+  cats.map((c) => `<option value="${c}">${esc(D.catList[c - 1].replace(/_/g, " ").replace(/([a-z])([A-Z])/g, "$1 $2"))} (${counts.get(c)})</option>`).join("") +
+  `<option value="0">No category (${counts.get(0) || 0})</option>`;
+let pool = [], page = 0;
+const PER = 16;
+function shuffle(a, seed) { let s = seed; for (let i = a.length - 1; i > 0; i--) { s = (s * 1103515245 + 12345) >>> 0; const j = s % (i + 1); [a[i], a[j]] = [a[j], a[i]]; } return a; }
+function fillPool(seed) {
+  const c = +$("cat").value;
+  pool = []; for (let i = 0; i < N; i++) if (c === -1 || D.cat[i] === c) pool.push(i);
+  shuffle(pool, seed); page = 0; renderBrowse();
+}
+function renderBrowse() {
+  const items = pool.slice(page * PER, page * PER + PER);
+  $("bgrid").innerHTML = items.map((i) => `<div class="card" data-i="${i}">${pic(i, "ph")}<div class="name">${esc(D.names[i])}</div>
+    <div class="row"><span>${esc(brandName(i) || "")}</span><span class="pr">${price(i)}</span></div></div>`).join("");
+  $("pinfo").textContent = `${page * PER + 1}–${Math.min(pool.length, page * PER + PER)} of ${pool.length.toLocaleString()}`;
+}
+$("cat").addEventListener("change", () => fillPool(7));
+$("shuffle").addEventListener("click", () => fillPool((Math.random() * 1e9) | 0));
+$("prev").addEventListener("click", () => { if (page > 0) { page--; renderBrowse(); } });
+$("next").addEventListener("click", () => { if ((page + 1) * PER < pool.length) { page++; renderBrowse(); } });
+$("bgrid").addEventListener("click", (e) => { const el = e.target.closest("[data-i]"); if (el) choose(+el.dataset.i); });
+$("random").addEventListener("click", () => { let i; do { i = (Math.random() * N) | 0; } while (!D.img[i]); choose(i); });
+
+// ---------- start ----------
+$("legend").innerHTML = D.blocks.map((b) => `<span><i style="background:var(--b-${b})"></i>${LABEL[b]} ${D.weights[b].toFixed(2)}</span>`).join("");
+$("version").innerHTML = `model <b>${esc(D.version)}</b>`;
+$("foot").innerHTML = `I computed every result with the served engine (model version ${esc(D.version)}) for all ${N.toLocaleString()} products and stored
+  them in this file with <code>tools/export_static_demo.py</code>, so the page needs no server; the export checks 300 random products against the engine
+  before writing. The API (<code>uvicorn app:app</code>) computes the same lists live and also takes custom weights. Photos load from the catalogue's
+  image links, so they need an internet connection. Type tags compare leaf categories:
+  ✓ same, ✗ different, grey when either product has none (15% of listings).`;
+fillPool(7);
+const start = byId.get(decodeURIComponent(location.hash.slice(1)));
+choose(start !== undefined ? start : byId.get("2852dde03bc410bd2c8cf09db9ff674c") ?? 0);
+</script>
+</body>
+</html>

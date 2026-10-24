@@ -1,0 +1,39 @@
+{
+  "weights": {
+    "text": 0.344,
+    "image": 0.4008,
+    "brand": 0.1021,
+    "price": 0.0449,
+    "list_price": 0.0007,
+    "colour": 0.0621,
+    "rating": 0.0331,
+    "weight": 0.0123
+  },
+  "image_encoder": "open_clip Marqo-FashionSigLIP",
+  "objective": "mean nDCG@10 on 1000 tuning queries (co-purchase weak labels)",
+  "train_ndcg": {
+    "learned": 0.4042,
+    "prior": 0.363,
+    "equal": 0.2832,
+    "text_only": 0.3409
+  },
+  "search": {
+    "method": "coarse-to-fine random search on the weight simplex: 3 anchors + Dirichlet samples, then Dirichlet samples centred on the best (concentration 100)",
+    "coarse_trials": 403,
+    "refine_trials": 200,
+    "seed": 0,
+    "coarse_best_ndcg": 0.3983
+  },
+  "data": {
+    "labelled_queries": 12193,
+    "train_queries": 6096,
+    "test_queries": 6097
+  },
+  "policy": {
+    "category_penalty": 0.15,
+    "family_dedupe": true,
+    "chosen_by": "100 validation queries, most substitutes in the top 5 (results/substitute_policy.json)",
+    "name_penalty": 0.1,
+    "name_penalty_chosen_by": "60 + 100 products without a category (results/name_policy.json)"
+  }
+}

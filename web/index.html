@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Similar Products</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232f6fed'/%3E%3Ccircle cx='12' cy='16' r='6' fill='none' stroke='white' stroke-width='3'/%3E%3Ccircle cx='21' cy='16' r='6' fill='none' stroke='white' stroke-width='3'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --ink: #14161a; --muted: #5b6270; --line: #e3e6eb;
+    --accent: #2f6fed; --good: #1f8a5b; --warn: #b4560b; --bad: #c0392b;
+    --shadow: 0 1px 2px rgba(16,24,40,.06), 0 4px 16px rgba(16,24,40,.06);
+    --b-text: #2f6fed; --b-image: #d9468f; --b-brand: #f08c2e; --b-price: #1f9d6b;
+    --b-list_price: #7cc4a6; --b-colour: #8f5be8; --b-rating: #e2b93b; --b-weight: #8a94a6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0f1115; --surface: #171a21; --ink: #eceef2; --muted: #9aa3b2; --line: #262b35;
+            --good: #4cc38a; --warn: #f0a35e; --bad: #ef6b5b;
+            --shadow: 0 1px 2px rgba(0,0,0,.4), 0 6px 20px rgba(0,0,0,.35); }
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--ink);
+         font: 15px/1.45 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header { padding: 28px 16px 8px; max-width: 1240px; margin: 0 auto; }
+  h1 { margin: 0; font-size: 26px; letter-spacing: -.02em; }
+  .sub { color: var(--muted); margin-top: 4px; max-width: 860px; }
+  .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+  .badge { background: var(--surface); border: 1px solid var(--line); border-radius: 999px;
+           padding: 4px 12px; font-size: 13px; color: var(--muted); }
+  .badge b { color: var(--ink); font-weight: 600; }
+  .badge.ok b { color: var(--good); } .badge.alert { border-color: var(--bad); } .badge.alert b { color: var(--bad); }
+  main { max-width: 1240px; margin: 0 auto; padding: 8px 16px 48px; }
+  h2.section { font-size: 15px; margin: 22px 0 8px; }
+  .tour { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; }
+  .case { text-align: left; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+          padding: 10px 12px; cursor: pointer; color: var(--ink); font: inherit; }
+  .case:hover, .case:focus-visible { border-color: var(--accent); outline: none; }
+  .case b { display: block; font-size: 14px; } .case span { color: var(--muted); font-size: 12.5px; }
+  .search { display: flex; gap: 8px; margin: 16px 0 6px; flex-wrap: wrap; }
+  .search input { flex: 1; min-width: 200px; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--line);
+                  background: var(--surface); color: var(--ink); font-size: 15px; }
+  button { padding: 10px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--surface);
+           color: var(--ink); font-size: 14px; cursor: pointer; font-family: inherit; }
+  button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .strip-label { font-size: 12.5px; color: var(--muted); margin: 4px 2px; }
+  .picks { display: flex; gap: 10px; overflow-x: auto; padding: 4px 2px 12px; min-height: 40px; }
+  .pick { flex: 0 0 104px; background: var(--surface); border: 1px solid var(--line); border-radius: 12px;
+          padding: 6px; font-size: 12px; color: var(--muted); text-align: left; }
+  .pick:hover { border-color: var(--accent); }
+  .pick img, .pick .noimg { width: 100%; height: 100px; object-fit: contain; border-radius: 8px; background: #fff; }
+  .pick span { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .noimg { display: flex; align-items: center; justify-content: center; color: #8a94a6; font-size: 12px; background: #fff; }
+  .layout { display: grid; grid-template-columns: 300px 1fr; gap: 20px; margin-top: 8px; }
+  @media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+  .panel { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 14px; box-shadow: var(--shadow); }
+  .query img, .query .noimg { width: 100%; height: 240px; object-fit: contain; background: #fff; border-radius: 10px; }
+  .query h2 { font-size: 16px; margin: 10px 0 4px; }
+  .meta { color: var(--muted); font-size: 13px; }
+  .signals { font-size: 12.5px; margin-top: 8px; }
+  .signals .miss { color: var(--warn); }
+  .controls h3 { font-size: 14px; margin: 18px 0 8px; display: flex; justify-content: space-between; align-items: center; }
+  .presets { display: flex; gap: 6px; flex-wrap: wrap; }
+  .presets button { padding: 5px 9px; font-size: 12px; }
+  .presets button[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); font-weight: 600; }
+  .w { display: grid; grid-template-columns: 14px 78px 1fr 40px; align-items: center; gap: 8px; font-size: 13px; margin: 6px 0; }
+  .dot { width: 10px; height: 10px; border-radius: 3px; }
+  .w input { width: 100%; }
+  .w .val { text-align: right; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .hint { font-size: 12px; color: var(--muted); margin: 2px 0 0; }
+  .note { border-left: 3px solid var(--accent); background: var(--surface); padding: 10px 12px; border-radius: 8px;
+          margin-bottom: 12px; font-size: 13.5px; }
+  .note.error { border-color: var(--bad); }
+  .resmeta { font-size: 12.5px; color: var(--muted); margin: 0 0 10px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 14px; }
+  .grid.loading { opacity: .45; transition: opacity .15s; }
+  .item { background: var(--surface); border: 1px solid var(--line); border-radius: 14px; padding: 10px;
+          box-shadow: var(--shadow); display: flex; flex-direction: column; gap: 6px; text-align: left; color: var(--ink); }
+  .item:hover { border-color: var(--accent); }
+  .item img, .item .noimg { width: 100%; height: 170px; object-fit: contain; background: #fff; border-radius: 10px; }
+  .item .name { font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; min-height: 38px; }
+  .row { display: flex; justify-content: space-between; gap: 6px; font-size: 12px; color: var(--muted); }
+  .row b { color: var(--ink); }
+  .chip { font-size: 11px; border-radius: 6px; padding: 1px 6px; border: 1px solid var(--line); white-space: nowrap;
+          overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+  .chip.same { color: var(--good); }
+  .bar { display: flex; height: 8px; border-radius: 99px; overflow: hidden; background: var(--line); }
+  .bar span { height: 100%; }
+  .penalty { font-size: 11.5px; color: var(--warn); }
+  .legend { display: flex; flex-wrap: wrap; gap: 12px; font-size: 12px; color: var(--muted); margin: 0 0 12px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+  .rank { font-size: 11px; color: var(--muted); }
+  .empty { color: var(--muted); padding: 30px; text-align: center; }
+  details.ops { margin-top: 28px; }
+  details.ops summary { cursor: pointer; font-weight: 600; font-size: 15px; }
+  .kv { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 8px 18px; margin-top: 12px; font-size: 13px; }
+  .kv div { display: flex; justify-content: space-between; gap: 10px; border-bottom: 1px dashed var(--line); padding: 3px 0; }
+  .kv span { color: var(--muted); } .kv b { font-variant-numeric: tabular-nums; text-align: right; word-break: break-all; }
+  .insight { margin-top: 36px; }
+  .insight > h2 { font-size: 18px; margin: 0 0 4px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 16px; margin-top: 12px; }
+  .cards h3 { font-size: 14px; margin: 0 0 2px; }
+  .cards .meta { margin: 0 0 12px; }
+  .hb { display: grid; grid-template-columns: 132px 1fr 64px; align-items: center; gap: 8px; font-size: 12px; margin: 7px 0; }
+  .hb .lab { color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .hb.strong .lab, .hb.strong .num { color: var(--ink); font-weight: 600; }
+  .hb .track { position: relative; height: 12px; background: var(--line); border-radius: 4px; }
+  .hb .fill { position: absolute; top: 0; height: 100%; border-radius: 4px; background: var(--muted); opacity: .55; }
+  .hb.strong .fill { background: var(--accent); opacity: 1; }
+  .hb .ci { position: absolute; top: 50%; height: 2px; margin-top: -1px; background: var(--ink); }
+  .hb .zero { position: absolute; top: -3px; bottom: -3px; width: 1px; background: var(--ink); opacity: .35; }
+  .hb .num { text-align: right; font-variant-numeric: tabular-nums; color: var(--muted); }
+  footer { color: var(--muted); font-size: 12px; text-align: center; padding: 0 16px 32px; }
+</style>
+</head>
+<body>
+<header>
+  <h1>Similar Products</h1>
+  <div class="sub">For a product a shopper is looking at, show <b>useful alternatives they could buy instead</b>: the same kind of
+    product, from other brands, colours and prices, and never another size of the same item. 30,000 Amazon fashion listings;
+    text, photo, brand, price, colour, rating and weight, with weights learned from what shoppers buy.</div>
+  <div class="badges" id="badges"></div>
+</header>
+<main>
+  <h2 class="section">Guided tour: three cases, one minute</h2>
+  <div class="tour" id="tour"><div class="meta">Loading cases...</div></div>
+
+  <div class="search" role="search">
+    <input id="q" aria-label="Search product names" placeholder="Search product names, e.g. striped t-shirt, cotton kurta, silk saree" autocomplete="off">
+    <button class="primary" id="go">Search</button>
+    <button id="surprise">Surprise me</button>
+  </div>
+  <div class="strip-label" id="strip-label">Random picks</div>
+  <div class="picks" id="picks"></div>
+
+  <div class="layout">
+    <aside class="panel">
+      <div class="query" id="query"><div class="empty">Pick a product above.</div></div>
+      <div class="controls">
+        <h3>Ranking</h3>
+        <div class="presets" id="presets">
+          <button data-preset="served" aria-pressed="true">Served</button>
+          <button data-preset="nopenalty" aria-pressed="false">No type penalty</button>
+          <button data-preset="text" aria-pressed="false">Text only</button>
+          <button data-preset="look" aria-pressed="false" title="Similar = looks alike (photo-led)">Same look</button>
+          <button data-preset="colour" aria-pressed="false" title="Similar = sold in the same colours, any type">Same colour</button>
+          <button data-preset="brand" aria-pressed="false" title="Similar = same brand">Same brand</button>
+        </div>
+        <h3>Product-type penalty <span class="val" id="v-penalty"></span></h3>
+        <input type="range" id="penalty" min="0" max="0.5" step="0.01" aria-label="Product-type penalty" style="width:100%">
+        <p class="hint">Subtracted from the score of a result whose known category differs from this product's (chosen on validation queries).</p>
+        <h3>Similarity weights</h3>
+        <div id="sliders"></div>
+      </div>
+    </aside>
+    <section aria-live="polite">
+      <div id="case-note"></div>
+      <div class="legend" id="legend"></div>
+      <div class="resmeta" id="resmeta"></div>
+      <div class="grid" id="results"></div>
+    </section>
+  </div>
+
+  <details class="ops" id="ops">
+    <summary>Operator view: what this instance is serving</summary>
+    <div class="kv" id="ops-kv"></div>
+    <p class="hint">Live from <code>/api/status</code> (Prometheus format at <code>/metrics</code>). Latency is measured server-side on <code>/find_similar_products</code>.
+      <button id="ops-refresh" style="padding:3px 9px;font-size:12px">Refresh</button></p>
+  </details>
+
+  <section class="insight" id="insight" hidden>
+    <h2>How the model was chosen and checked</h2>
+    <div class="meta" id="insight-meta"></div>
+    <div class="cards">
+      <div class="panel"><h3>1 · Useful alternatives (my blind labels)</h3><p class="meta" id="human-meta"></p><div id="human"></div></div>
+      <div class="panel"><h3>2 · Co-purchase proxy, fresh test queries</h3><p class="meta" id="base-meta"></p><div id="base"></div></div>
+      <div class="panel"><h3>3 · What each attribute adds</h3><p class="meta">Proxy nDCG@10 lost when one block is switched off. Lines: 95% bootstrap CI.</p><div id="abl"></div></div>
+    </div>
+  </section>
+</main>
+<footer>Each bar shows how much every attribute contributed to the score (weight x similarity). Click or press Enter on any result to search from it.
+  Data: PromptCloud Amazon fashion sample (Kaggle); images load from the dataset's original URLs.</footer>
+<script>
+const LABELS = {text: "Text", image: "Image", brand: "Brand", price: "Price", list_price: "List price",
+                colour: "Colour", rating: "Rating", weight: "Weight"};
+const $ = (id) => document.getElementById(id);
+const color = (b) => `var(--b-${b})`;
+const money = (v) => v == null ? "-" : "₹" + Math.round(v).toLocaleString("en-IN");
+let learned = {}, weights = {}, policy = 0, penalty = 0, current = null, timer = null, latest = 0;
+
+function hashId() { try { return decodeURIComponent(location.hash.slice(1)); } catch { return ""; } }
+function esc(s) { return String(s ?? "").replace(/[&<>"']/g, (c) => ({"&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"}[c])); }
+function noImg(text) { return `<div class="noimg">${text}</div>`; }
+function imgFail(el) { el.outerHTML = noImg("photo unavailable"); }
+function img(url, alt) {
+  return url ? `<img src="${esc(url)}" loading="lazy" referrerpolicy="no-referrer" alt="${esc(alt)}" onerror="imgFail(this)">`
+             : noImg("no photo in the data");
+}
+
+async function api(path) {
+  const res = await fetch(path);
+  if (!res.ok) { let msg = res.statusText; try { msg = (await res.json()).detail || msg; } catch {} throw new Error(msg); }
+  return res.json();
+}
+
+function renderSliders() {
+  $("sliders").innerHTML = Object.keys(LABELS).map((b) => `
+    <div class="w"><span class="dot" style="background:${color(b)}"></span><label for="w-${b}">${LABELS[b]}</label>
+      <input type="range" id="w-${b}" min="0" max="1" step="0.01" value="${weights[b] ?? 0}">
+      <span class="val" id="v-${b}">${(weights[b] ?? 0).toFixed(2)}</span></div>`).join("");
+  Object.keys(LABELS).forEach((b) => $(`w-${b}`).addEventListener("input", (e) => {
+    weights[b] = parseFloat(e.target.value);
+    $(`v-${b}`).textContent = weights[b].toFixed(2);
+    markPreset(null); reload();
+  }));
+  $("penalty").value = penalty; $("v-penalty").textContent = penalty.toFixed(2);
+  $("legend").innerHTML = Object.keys(LABELS).map((b) => `<span><i style="background:${color(b)}"></i>${LABELS[b]}</span>`).join("");
+}
+
+function reload() { clearTimeout(timer); timer = setTimeout(() => current && loadSimilar(current), 200); }
+function markPreset(name) { document.querySelectorAll("#presets button").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.preset === name))); }
+// "Similar" has more than one meaning. Served is the default (something to buy instead); the others are other readings
+// of the same attributes, chosen per request with ?weights= (no type penalty, since they allow another product type)
+const MEANINGS = {text: {text: 1}, look: {image: 0.8, text: 0.2}, colour: {colour: 0.6, image: 0.2, text: 0.2},
+                  brand: {brand: 0.6, text: 0.4}};
+function applyPreset(name) {
+  const w = MEANINGS[name];
+  weights = w ? Object.fromEntries(Object.keys(LABELS).map((b) => [b, w[b] || 0])) : {...learned};
+  penalty = name === "served" ? policy : 0;
+  renderSliders(); markPreset(name); current && loadSimilar(current);
+}
+function isLearned() { return Object.keys(LABELS).every((b) => Math.abs((weights[b] ?? 0) - (learned[b] ?? 0)) < 1e-6); }
+
+function pctDiff(a, b) {
+  if (a == null || b == null || !b) return "";
+  const d = Math.round(100 * (a - b) / b);
+  return d === 0 ? "same price" : (d > 0 ? "+" : "") + d + "%";
+}
+
+async function loadSimilar(id, note) {
+  current = id;
+  history.replaceState(null, "", "#" + encodeURIComponent(id));   // shareable link to this product
+  if (note !== undefined) $("case-note").innerHTML = note;
+  const params = new URLSearchParams({num_similar: 12});
+  if (!isLearned()) params.set("weights", Object.entries(weights).map(([k, v]) => `${k}:${v}`).join(","));
+  if (Math.abs(penalty - policy) > 1e-9) params.set("category_penalty", penalty);
+  const ticket = ++latest;   // only the newest request may paint the page
+  $("results").classList.add("loading");
+  let data;
+  try { data = await api(`/api/similar/${encodeURIComponent(id)}?${params}`); }
+  catch (err) {
+    if (ticket !== latest) return;
+    $("results").classList.remove("loading");
+    $("results").innerHTML = `<div class="note error" style="grid-column:1/-1">${esc(err.message)}<br>
+      <button onclick="applyPreset('served')" style="margin-top:8px">Back to the served model</button></div>`;
+    $("resmeta").textContent = "";
+    return;
+  }
+  if (ticket !== latest) return;   // a newer slider move or click already asked for something else
+  $("results").classList.remove("loading");
+  const q = data.query, sig = data.signal;
+  $("query").innerHTML = `${img(q.image, q.name)}<h2>${esc(q.name)}</h2>
+    <div class="meta">${esc(q.brand || "Brand unknown")} &middot; ${money(q.price)}${q.rating ? " &middot; " + q.rating + "★" : ""}</div>
+    <div class="meta">Type: ${esc(q.category || "unknown (no category in the data)")}</div>
+    <div class="signals">Signals used: ${sig.available.map((b) => LABELS[b]).join(", ") || "none"}
+      ${sig.missing.length ? `<div class="miss">No data for: ${sig.missing.map((b) => LABELS[b]).join(", ")}. Those weights add nothing for this product; ranking falls back to the rest.</div>` : ""}</div>`;
+  $("resmeta").textContent = `${data.results.length} results ` + (data.took_ms < 0.05 ? "from the in-process cache" : `in ${data.took_ms.toFixed(1)} ms (engine, this request)`) +
+    (data.category_penalty ? ` · type penalty ${data.category_penalty.toFixed(2)}` : " · no type penalty");
+  $("results").innerHTML = data.results.map((r, i) => {
+    const pos = data.blocks.reduce((s, b) => s + Math.max(0, r.contributions[b]), 0) || 1e-9;
+    const segs = data.blocks.map((b) => `<span title="${LABELS[b]}: ${r.contributions[b].toFixed(3)}" style="width:${(100 * Math.max(0, r.contributions[b]) / pos).toFixed(1)}%;background:${color(b)}"></span>`).join("");
+    const top = data.blocks.filter((b) => r.contributions[b] > 0).sort((a, b) => r.contributions[b] - r.contributions[a]).slice(0, 2).map((b) => LABELS[b]).join(" + ");
+    const chip = r.same_type === true ? `<span class="chip same" title="Same category as the selected product">✓ ${esc(r.category)}</span>`
+               : r.same_type === false ? `<span class="chip" title="Different category from the selected product">${esc(r.category)}</span>`
+               : `<span class="chip" title="At least one category is unknown">type unknown</span>`;
+    const pen = r.contributions.category < 0 ? `<div class="penalty">different type: ${r.contributions.category.toFixed(2)}</div>` : "";
+    return `<button class="item" data-id="${esc(r.id)}" aria-label="Rank ${i + 1}: ${esc(r.name)}">${img(r.image, r.name)}
+      <div class="rank">#${i + 1} &middot; mostly ${esc(top || "-")}</div>${chip}
+      <div class="name">${esc(r.name)}</div>
+      <div class="row"><span>${esc(r.brand || "Brand unknown")}</span><b>${money(r.price)}</b></div>
+      <div class="row"><span>vs selected</span><span>${pctDiff(r.price, q.price)}</span></div>
+      <div class="bar">${segs}</div><div class="row"><span>score</span><b>${r.score.toFixed(3)}</b></div></button>`;
+  }).join("");
+  document.querySelectorAll(".item").forEach((el) => el.addEventListener("click", () => {
+    loadSimilar(el.dataset.id, ""); window.scrollTo({top: $("q").offsetTop - 20, behavior: "smooth"}); }));
+}
+
+async function search(q) {
+  $("strip-label").textContent = q ? `Searching names for "${q}"...` : "Loading random picks...";
+  let data;
+  try { data = await api(`/api/products?limit=14&q=${encodeURIComponent(q || "")}`); }
+  catch (err) { $("strip-label").textContent = "Search failed: " + err.message; return; }
+  const items = data.items;
+  $("strip-label").textContent = !q ? "Random picks (click one)" : items.length
+    ? `${data.total} product names contain every word of "${q}"${data.total > items.length ? `, showing ${items.length}` : ""}. Click one to select it.`
+    : `No product name contains every word of "${q}". Search matches words in names, not meanings: try fewer or different words.`;
+  $("picks").innerHTML = items.map((p) => `<button class="pick" data-id="${esc(p.id)}" aria-label="${esc(p.name)}">${img(p.image, p.name)}<span>${esc(p.name)}</span></button>`).join("");
+  document.querySelectorAll(".pick").forEach((el) => el.addEventListener("click", () => loadSimilar(el.dataset.id, "")));
+}
+
+async function surprise() {
+  try { const p = await api("/api/random"); loadSimilar(p.id, ""); }
+  catch (err) { $("case-note").innerHTML = `<div class="note error">${esc(err.message)}</div>`; }
+}
+
+async function renderTour() {
+  let cases = [];
+  try { cases = await api("/api/cases"); } catch {}
+  if (!cases.length) { $("tour").innerHTML = `<div class="meta">No cases file (results/demo_cases.json); run tools/demo_cases.py.</div>`; return; }
+  $("tour").innerHTML = cases.map((c, i) => `<button class="case" data-i="${i}"><b>${esc(c.title)}</b><span>${esc(c.teaser)}</span></button>`).join("");
+  document.querySelectorAll(".case").forEach((el) => el.addEventListener("click", () => {
+    const c = cases[+el.dataset.i];
+    applyPreset("served");
+    loadSimilar(c.id, `<div class="note"><b>${esc(c.title)}.</b> ${esc(c.note)}</div>`);
+  }));
+}
+
+async function renderOps() {
+  let s;
+  try { s = await api("/api/status"); } catch (err) { $("ops-kv").innerHTML = `<div>${esc(err.message)}</div>`; return; }
+  const lat = s.latency_ms_recent;
+  const rows = [["Model version", s.model_version], ["Artifacts match manifest", s.manifest_verified ? "yes" : "NO"],
+    ["Status", s.degraded ? "DEGRADED: " + s.degraded_reasons.join("; ") : "healthy"], ["Search mode", s.search_mode],
+    ["Products", s.products.toLocaleString()], ["Image coverage", (100 * s.image_coverage).toFixed(1) + "%"],
+    ["Type penalty", s.category_penalty], ["Cache hits / misses", `${s.cache.hits} / ${s.cache.misses}`],
+    ["Latency p50 / p95", lat ? `${lat.p50.toFixed(2)} / ${lat.p95.toFixed(2)} ms (n=${lat.n})` : "no requests yet"],
+    ["Server errors (5xx)", s.server_errors], ["Uptime", s.uptime_s + " s"]];
+  $("ops-kv").innerHTML = rows.map(([k, v]) => `<div><span>${esc(k)}</span><b>${esc(v)}</b></div>`).join("");
+  $("badges").innerHTML = [
+    `<span class="badge ${s.degraded ? "alert" : "ok"}">Status <b>${s.degraded ? "degraded" : "healthy"}</b></span>`,
+    `<span class="badge">Model <b>${esc(s.model_version)}</b></span>`,
+    `<span class="badge">Photos for <b>${(100 * s.image_coverage).toFixed(1)}%</b> of products</span>`,
+    ...(window.MODEL_BADGES || [])].join("");
+  if (s.degraded) $("insight-meta").textContent = "This instance is degraded, so the saved numbers below describe the full model, not what is running now.";
+}
+
+// Horizontal bars on a shared axis that includes zero; optional CI line per row
+function bars(rows, fmt) {
+  const ends = rows.flatMap((r) => [r.value, r.lo ?? r.value, r.hi ?? r.value, 0]);
+  const lo = Math.min(...ends), hi = Math.max(...ends), span = hi - lo || 1;
+  const x = (v) => (100 * (v - lo) / span).toFixed(2) + "%";
+  return rows.map((r) => {
+    const a = Math.min(0, r.value), b = Math.max(0, r.value);
+    const ci = r.lo == null ? "" : `<span class="ci" style="left:${x(r.lo)};width:calc(${x(r.hi)} - ${x(r.lo)})"></span>`;
+    return `<div class="hb${r.strong ? " strong" : ""}" title="${esc(r.title || r.label)}"><span class="lab">${esc(r.label)}</span>
+      <span class="track"><span class="fill" style="left:${x(a)};width:calc(${x(b)} - ${x(a)})${r.color ? ";background:" + r.color + ";opacity:1" : ""}"></span>
+      ${lo < 0 ? `<span class="zero" style="left:${x(0)}"></span>` : ""}${ci}</span><span class="num">${fmt(r.value)}</span></div>`;
+  }).join("");
+}
+
+function renderInsight(model) {
+  const ev = model.evaluation || {}, q = ev.quality || {}, sig = ev.significance || {}, h = model.human || {};
+  const names = {text_only: "Text only", hand_set_prior: "Hand-set weights", weights_only: "Learned weights only",
+                 with_grouping: "+ one listing per product", with_category_penalty: "+ category penalty",
+                 served: "+ name words (served)"};
+  if (h.substitute_share) {
+    $("human-meta").textContent = `Share of the results I labelled that I called a real substitute: ${h.labelled_pairs} result pairs from ${h.queries} held-out test queries, labelled blind to the system, rank and category. Line: 95% CI of the served model minus each row.`;
+    const gain = {weights_only: h.served_minus_weights_only, text_only: h.served_minus_text_only};
+    $("human").innerHTML = bars(["text_only", "weights_only", "served"].map((n) => {
+      const d = gain[n], top = h.substitute_share.served;
+      return {label: n === "served" ? "Served" : names[n], value: h.substitute_share[n], strong: n === "served",
+              lo: d ? top - d.ci95[1] : null, hi: d ? top - d.ci95[0] : null};
+    }), (v) => (100 * v).toFixed(0) + "%");
+    window.MODEL_BADGES = [`<span class="badge">Called a substitute <b>${(100 * h.substitute_share.served).toFixed(0)}%</b> (text only ${(100 * h.substitute_share.text_only).toFixed(0)}%)</span>`];
+  }
+  if (q.served) {
+    $("base-meta").textContent = `nDCG@10 against co-purchase labels on ${ev.split.fresh_test} held-out test queries (no tuning or validation choice used them). Lines: 95% CI of the gap to the served model.`;
+    $("base").innerHTML = bars(Object.keys(names).filter((n) => q[n]).map((n) => {
+      const s = sig[n], v = q[n].ndcg;
+      return {label: names[n], value: v, strong: n === "served", lo: s ? q.served.ndcg - s.ci95[1] : null, hi: s ? q.served.ndcg - s.ci95[0] : null};
+    }), (v) => v.toFixed(3));
+    $("abl").innerHTML = bars(Object.entries(ev.ablation || {}).sort((a, b) => b[1].delta - a[1].delta).map(([b, s]) =>
+      ({label: LABELS[b], value: s.delta, lo: s.ci95[0], hi: s.ci95[1], color: color(b)})), (v) => Math.abs(v) < 0.0005 ? "0.000" : (v > 0 ? "+" : "") + v.toFixed(3));
+  }
+  if (!$("insight-meta").textContent)
+    $("insight-meta").textContent = "Weights were learned from co-purchases; the type penalty was chosen on validation queries; everything below is measured on held-out test queries.";
+  $("insight").hidden = false;
+}
+
+async function init() {
+  try {
+    const model = await api("/api/model");
+    learned = model.weights; weights = {...learned};
+    policy = penalty = (model.policy && model.policy.category_penalty) || 0;
+    renderInsight(model);
+  } catch (err) {
+    $("case-note").innerHTML = `<div class="note error">Could not load the model description: ${esc(err.message)}. The service may still be starting; reload in a few seconds.</div>`;
+  }
+  renderSliders();
+  $("go").addEventListener("click", () => search($("q").value.trim()));
+  $("q").addEventListener("keydown", (e) => e.key === "Enter" && search($("q").value.trim()));
+  $("surprise").addEventListener("click", surprise);
+  $("penalty").addEventListener("input", (e) => { penalty = parseFloat(e.target.value); $("v-penalty").textContent = penalty.toFixed(2); markPreset(null); reload(); });
+  document.querySelectorAll("#presets button").forEach((b) => b.addEventListener("click", () => applyPreset(b.dataset.preset)));
+  $("ops").addEventListener("toggle", () => $("ops").open && renderOps());
+  $("ops-refresh").addEventListener("click", renderOps);
+  renderOps(); renderTour(); search("");
+  const start = hashId();
+  if (start) loadSimilar(start, ""); else surprise();
+}
+init();
+</script>
+</body>
+</html>

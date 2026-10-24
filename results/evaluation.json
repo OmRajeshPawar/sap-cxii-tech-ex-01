@@ -1,0 +1,216 @@
+{
+  "split": {
+    "labelled_queries_name_level": 12193,
+    "labelled_queries_family_level": 11410,
+    "used_in_development": {
+      "tune": 1000,
+      "validation": 2000,
+      "early_check": 2000
+    },
+    "fresh_test": 6561,
+    "rule": "no product group (name, family or photo) shared with any used query",
+    "products_without_category": 0.1501
+  },
+  "labels": {
+    "labelled_queries": 11410,
+    "pairs": 23860,
+    "mean_relevant_per_query": 2.091148115687993,
+    "pairs_same_leaf_category": 0.8031014249790445,
+    "pairs_name_jaccard_ge_0.5": 0.31215423302598494,
+    "random_pairs_name_jaccard_ge_0.5": 0.0041
+  },
+  "quality": {
+    "random_same_category": {
+      "recall": 0.04935241433869692,
+      "ndcg": 0.027379094431940754,
+      "hit_rate": 0.09205913732662704,
+      "mrr": 0.028656406422753015,
+      "same_category": 1.0,
+      "coverage": null
+    },
+    "text_only": {
+      "recall": 0.40837567105285444,
+      "ndcg": 0.3128115057341524,
+      "hit_rate": 0.5619570187471422,
+      "mrr": 0.34768823954923633,
+      "same_category": 0.7772895130208136,
+      "coverage": 0.5085666666666666
+    },
+    "hand_set_prior": {
+      "recall": 0.4528906380415297,
+      "ndcg": 0.3527332821622037,
+      "hit_rate": 0.6105776558451456,
+      "mrr": 0.393268302596149,
+      "same_category": 0.9431500618265323,
+      "coverage": 0.6789666666666667
+    },
+    "weights_only": {
+      "recall": 0.49260819706635894,
+      "ndcg": 0.38349651094439285,
+      "hit_rate": 0.6508154244779759,
+      "mrr": 0.4228230549446827,
+      "same_category": 0.8364826581943341,
+      "coverage": 0.6837
+    },
+    "with_grouping": {
+      "recall": 0.49556651497666593,
+      "ndcg": 0.3863446128716326,
+      "hit_rate": 0.6535589087029416,
+      "mrr": 0.42525753429960106,
+      "same_category": 0.8356893225916261,
+      "coverage": 0.6788333333333333
+    },
+    "with_category_penalty": {
+      "recall": 0.48407672320566697,
+      "ndcg": 0.3785580466083083,
+      "hit_rate": 0.6433470507544582,
+      "mrr": 0.418473882465652,
+      "same_category": 0.9634798797024379,
+      "coverage": 0.6802
+    },
+    "served": {
+      "recall": 0.48438917557573247,
+      "ndcg": 0.3788594258786994,
+      "hit_rate": 0.6441091297058376,
+      "mrr": 0.41870583268617106,
+      "same_category": 0.9630852054607819,
+      "coverage": 0.68
+    }
+  },
+  "significance": {
+    "text_only": {
+      "delta": 0.06604792014454701,
+      "ci95": [
+        0.06069429812975762,
+        0.07099915012913781
+      ],
+      "share_boot_le_0": 0.0
+    },
+    "hand_set_prior": {
+      "delta": 0.026126143716495773,
+      "ci95": [
+        0.022551499878187352,
+        0.029714689202200946
+      ],
+      "share_boot_le_0": 0.0
+    },
+    "weights_only": {
+      "delta": -0.004637085065693386,
+      "ci95": [
+        -0.00738323876302522,
+        -0.0019370350764908706
+      ],
+      "share_boot_le_0": 1.0
+    },
+    "with_grouping": {
+      "delta": -0.007485186992933121,
+      "ci95": [
+        -0.010037522980349682,
+        -0.004978492669867268
+      ],
+      "share_boot_le_0": 1.0
+    },
+    "with_category_penalty": {
+      "delta": 0.000301379270391207,
+      "ci95": [
+        -0.00026475578378191983,
+        0.0008313305309766094
+      ],
+      "share_boot_le_0": 0.148
+    }
+  },
+  "ablation": {
+    "text": {
+      "delta": 0.08783981438245345,
+      "ci95": [
+        0.08193827573701165,
+        0.09389695942030084
+      ],
+      "share_boot_le_0": 0.0
+    },
+    "image": {
+      "delta": 0.03840602296426728,
+      "ci95": [
+        0.03424429089179663,
+        0.04260446874750744
+      ],
+      "share_boot_le_0": 0.0
+    },
+    "brand": {
+      "delta": 0.00843642636153097,
+      "ci95": [
+        0.006360998714399685,
+        0.010402208637763356
+      ],
+      "share_boot_le_0": 0.0
+    },
+    "price": {
+      "delta": 0.006586646473101894,
+      "ci95": [
+        0.004662891568496489,
+        0.00842974708229369
+      ],
+      "share_boot_le_0": 0.0
+    },
+    "list_price": {
+      "delta": 3.076648309778191e-05,
+      "ci95": [
+        -0.00024017369891256413,
+        0.0003056307114185441
+      ],
+      "share_boot_le_0": 0.4185
+    },
+    "colour": {
+      "delta": 0.002007655714857115,
+      "ci95": [
+        0.001123520574027755,
+        0.0029679810773428285
+      ],
+      "share_boot_le_0": 0.0
+    },
+    "rating": {
+      "delta": 0.0011287869835187568,
+      "ci95": [
+        -0.0006727658183177172,
+        0.002892635963169209
+      ],
+      "share_boot_le_0": 0.0985
+    },
+    "weight": {
+      "delta": -0.0006625224732666363,
+      "ci95": [
+        -0.0010993626168569908,
+        -0.0002507302101326658
+      ],
+      "share_boot_le_0": 0.9995
+    }
+  },
+  "serving": {
+    "startup_s": 3.39671730005648,
+    "cached_ms": 0.0012048000935465097,
+    "repeat_share_without_filter": 0.2852,
+    "exact_ms": [
+      1.1226999922655523,
+      1.360134995775297
+    ],
+    "hnsw_ms": [
+      1.052499981597066,
+      1.2558500166051088
+    ],
+    "hnsw_recall_vs_exact": 0.9622,
+    "hnsw_build_s": 7.039969700039364,
+    "note": "in-process engine time on one laptop CPU core, cache bypassed; HTTP numbers: tools/http_bench.py"
+  },
+  "weights": {
+    "text": 0.344,
+    "image": 0.4008,
+    "brand": 0.1021,
+    "price": 0.0449,
+    "list_price": 0.0007,
+    "colour": 0.0621,
+    "rating": 0.0331,
+    "weight": 0.0123
+  },
+  "category_penalty": 0.15,
+  "name_penalty": 0.1
+}
