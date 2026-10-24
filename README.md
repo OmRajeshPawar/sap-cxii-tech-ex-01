@@ -4,7 +4,7 @@ Given a product's `uniq_id`, return the products a shopper could buy instead: th
 brands, colours and prices. Built for the [SAP technical exercise](https://github.com/punitmishra/sap-cxii-tech-ex-01)
 on 30,000 Amazon fashion listings, served by FastAPI, shipped as a Docker image and deployed to Kubernetes in CI.
 
-## Review the submission
+## Start here
 
 - **Interactive demo:** download the repository and open [docs/index.html](docs/index.html) in a browser. No server
   needed: search or browse all 30,000 products, see each one's top 10 with its score breakdown, and compare it with the
@@ -28,7 +28,7 @@ What sets it apart:
 - Eight attribute blocks with weights learned from what shoppers bought, not set by hand.
 - A product-type penalty and one-listing-per-product rule, so a striped T-shirt returns T-shirts, not jeans or the same shirt in another size.
 - Every score splits exactly into per-attribute parts, and the weights can be changed per request.
-- Exact search by default, FAISS HNSW optional; a model version on every response and a readiness check that refuses to serve mismatched files.
+- Exact search by default, FAISS HNSW optional; a model version on every response and a readiness check that takes an instance with mismatched files out of rotation.
 
 ## Quick start
 
@@ -93,8 +93,8 @@ flowchart TD
    prices are heavily skewed. A missing value is an empty block, so it never counts as a match.
 2. **One score that explains itself:** each block is L2-normalised and scaled by √weight, so a single sparse dot
    product equals the weighted sum of cosines and splits exactly into per-attribute parts.
-3. **Weights learned from behaviour:** 12,193 products list what shoppers bought alongside them. Random search over
-   those labels sets photo 0.40, text 0.34, brand 0.10, colour 0.06, price 0.04, rating 0.03, weight 0.01.
+3. **Weights learned from behaviour:** 12,193 products list what shoppers bought alongside them. Random search on 1,000
+   tuning queries drawn from those labels sets photo 0.40, text 0.34, brand 0.10, colour 0.06, price 0.04, rating 0.03, weight 0.01.
 4. **Substitutes, not complements:** a product of a different category loses 0.15, and where a category is missing,
    a clash of wearer or type words in the names (men's vs women's, T-shirt vs jeans) loses 0.10. A striped T-shirt
    returns T-shirts, not the jeans people buy with it.

@@ -1,4 +1,4 @@
-"""Weight learning, uncertainty and splits (simsearch/evaluation.py, labels.py): the parts an ML reviewer probes."""
+"""Weight learning, uncertainty and splits (simsearch/evaluation.py, labels.py): the parts most worth checking."""
 from pathlib import Path
 
 import numpy as np
