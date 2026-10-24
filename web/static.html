@@ -343,7 +343,9 @@ $("bgrid").addEventListener("click", (e) => { const el = e.target.closest("[data
 $("random").addEventListener("click", () => { let i; do { i = (Math.random() * N) | 0; } while (!D.img[i]); choose(i); });
 
 // ---------- start ----------
-$("legend").innerHTML = D.blocks.map((b) => `<span><i style="background:var(--b-${b})"></i>${LABEL[b]} ${D.weights[b].toFixed(2)}</span>`).join("");
+const wfmt = (v) => (v > 0 && v < 0.01 ? v.toFixed(3) : v.toFixed(2));
+$("legend").innerHTML = D.blocks.map((b) => `<span><i style="background:var(--b-${b})"></i>${LABEL[b]} ${wfmt(D.weights[b])}</span>`).join("") +
+  `<span style="flex-basis:100%">Weights learned from what shoppers bought: a random search scored by nDCG@10 on 1,000 tuning queries. List price adds almost nothing once sales price is used.</span>`;
 $("version").innerHTML = `model <b>${esc(D.version)}</b>`;
 $("foot").innerHTML = `I computed every result with the served engine (model version ${esc(D.version)}) for all ${N.toLocaleString()} products and stored
   them in this file with <code>tools/export_static_demo.py</code>, so the page needs no server; the export checks 300 random products against the engine

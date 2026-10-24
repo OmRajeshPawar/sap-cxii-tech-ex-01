@@ -94,7 +94,7 @@ flowchart TD
 2. **One score that explains itself:** each block is L2-normalised and scaled by √weight, so a single sparse dot
    product equals the weighted sum of cosines and splits exactly into per-attribute parts.
 3. **Weights learned from behaviour:** 12,193 products list what shoppers bought alongside them. Random search on 1,000
-   tuning queries drawn from those labels sets photo 0.40, text 0.34, brand 0.10, colour 0.06, price 0.04, rating 0.03, weight 0.01.
+   tuning queries drawn from those labels sets photo 0.40, text 0.34, brand 0.10, colour 0.06, price 0.04, rating 0.03, weight 0.01, list price 0.001.
 4. **Substitutes, not complements:** a product of a different category loses 0.15, and where a category is missing,
    a clash of wearer or type words in the names (men's vs women's, T-shirt vs jeans) loses 0.10. A striped T-shirt
    returns T-shirts, not the jeans people buy with it.

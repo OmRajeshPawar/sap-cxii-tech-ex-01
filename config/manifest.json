@@ -1,11 +1,11 @@
 {
-  "model_version": "7cc290f4fc29",
-  "created": "2026-10-24T11:54:10Z",
+  "model_version": "0d7c43f857c5",
+  "created": "2026-10-24T13:00:03Z",
   "artifacts": {
     "data": "6cd0dfa83a311533c6c991cc6586d13cc4e94e7d6fb799d2d00e5aa2a4bf8f10",
     "image_embeddings": "f9be1e20d3a5f6d4f35b611e624502bb058e02639f06888d340eb4e8bdc77718",
     "model_config": "70f76ce3284252edfb3f992e46ab687787d528caa2f32ce7d99df1ccba2c0839",
-    "serving_code": "834dca9e8b84574faae1516d93c0caf5b64800b108c733358dcd26e90427bfb3"
+    "serving_code": "5b8cfe299519b3160ea856ffe6c4e567f7234fa620d4b2d65637e401cd7b04e3"
   },
   "image_encoder": {
     "model": "fashion_siglip",
