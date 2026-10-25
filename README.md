@@ -4,6 +4,11 @@ Given a product's `uniq_id`, return the products a shopper could buy instead: th
 brands, colours and prices. Built for the [SAP technical exercise](https://github.com/punitmishra/sap-cxii-tech-ex-01)
 on 30,000 Amazon fashion listings, served by FastAPI, shipped as a Docker image and deployed to Kubernetes in CI.
 
+<p align="center">
+  <a href="media/intro.mp4"><img src="media/intro_poster.jpg" width="300" alt="Watch the 90-second video intro"></a><br>
+  <b>90-second intro:</b> the brief, the approach, the results and the live demo, in a minute and a half.
+</p>
+
 ## Start here
 
 - **Interactive demo:** start the service ([Quick start](#quick-start)) and open <http://localhost:8000/>: search
@@ -151,4 +156,5 @@ plan are in [OPERATIONS.md](OPERATIONS.md).
 | `tune.py`, `evaluate.py`, `tools/` | Weight learning, evaluation, photo pipeline, hand-label scoring, benchmarks |
 | `results/` | Every reported number, including the hand labels |
 | `analysis/` | Data exploration report and charts |
+| `media/` | The 90-second video intro |
 | `Dockerfile`, `k8s.yaml`, `.github/workflows/ci.yml` | Container, cluster manifest, CI |

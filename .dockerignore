@@ -10,3 +10,4 @@ tools/
 analysis/
 *.md
 !README.md
+media/
