@@ -56,7 +56,7 @@
 ## 10. Ground-truth candidates
 - `other_items_customers_buy` is filled for 24,363 of 30,000 (81%), with 9.1 names per row on average.
 - 46% of those names match a product in this catalogue, and 19,874 products have at least one match. Keeping one query per product name and dropping matches to the query's own name leaves 12,193 labelled queries (`simsearch/labels.py`).
-- Because this is real shopper behaviour, it serves as weak relevance labels. It is never used as a feature, since the model would then be scored on its own input. Note that 'bought together' includes complements (jeans with a T-shirt), not only alternatives.
+- Because this is real shopper behaviour, it serves as weak relevance labels. It is never used as a feature, since the model would then be scored on its own input. Note that 'also bought' is mostly same-category alternatives, with some complements mixed in.
 
 ## 11. Text: which fields describe the product?
 - `meta_keywords` is the product name plus a few seller words: in 42% of rows it adds no new word at all, and the median row adds 11% new words. Names are 8 words long (median). Decision: TF-IDF on name + category text; keywords left out.

@@ -26,7 +26,7 @@ Every measure is defined in plain English in [DESIGN.md](DESIGN.md#how-quality-i
 What sets it apart:
 
 - Photos are part of the served ranking: [Marqo-FashionSigLIP](https://huggingface.co/Marqo/marqo-fashionSigLIP) embeddings for 29,861 products, compressed to 64 dimensions.
-- Eight attribute blocks with weights learned from what shoppers bought, not set by hand.
+- Eight attribute blocks with weights learned from shopping behaviour, not set by hand.
 - A product-type penalty and one-listing-per-product rule, so a striped T-shirt returns T-shirts, not jeans or the same shirt in another size.
 - Every score splits exactly into per-attribute parts, and the weights can be changed per request.
 - Exact search by default, FAISS HNSW optional; a model version on every response and a readiness check that takes an instance with mismatched files out of rotation.
@@ -94,11 +94,11 @@ flowchart TD
    prices are heavily skewed. A missing value is an empty block, so it never counts as a match.
 2. **One score that explains itself:** each block is L2-normalised and scaled by √weight, so a single sparse dot
    product equals the weighted sum of cosines and splits exactly into per-attribute parts.
-3. **Weights learned from behaviour:** 12,193 products list what shoppers bought alongside them. Random search on 1,000
+3. **Weights learned from behaviour:** 12,193 products list other items their buyers also bought, 80% of them in the same category. Random search on 1,000
    tuning queries drawn from those labels sets photo 0.40, text 0.34, brand 0.10, colour 0.06, price 0.04, rating 0.03, weight 0.01, list price 0.001.
 4. **Substitutes, not complements:** a product of a different category loses 0.15, and where a category is missing,
-   a clash of wearer or type words in the names (men's vs women's, T-shirt vs jeans) loses 0.10. A striped T-shirt
-   returns T-shirts, not the jeans people buy with it.
+   a clash of wearer or type words in the names (men's vs women's, T-shirt vs jeans) loses 0.10. Matched on brand and words alone, a
+   striped RUF & TUF T-shirt's top result is RUF & TUF jeans; with the penalty it returns striped T-shirts.
 5. **One listing per product:** listings that share a name, a size-stripped name or an identical photo count as one,
    so the top 10 never repeats an item in another size.
 6. **Photos without PyTorch in production:** four encoders were compared (ResNet-50, DINOv2, SigLIP 2,
@@ -139,7 +139,7 @@ plan are in [OPERATIONS.md](OPERATIONS.md).
   product-page widget; `?weights=` and `?category_penalty=0` serve the other readings.
 - **The data needs heavy cleaning and has no relevance labels.** 79% of weights are a placeholder value, 27% of
   brands and 80% of colours are missing, 15% of products have no category, and sizes are listed as separate products.
-  Co-purchase lists are the only behavioural signal, and they mix substitutes with complements, so quality is
+  Co-purchase lists are the only behavioural signal: mostly alternatives (80% same category) with some complements, so quality is
   checked with hand labels ([analysis/data_report.md](analysis/data_report.md)).
 
 ## Repository

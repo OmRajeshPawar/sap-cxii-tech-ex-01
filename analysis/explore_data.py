@@ -168,8 +168,8 @@ def main():
         "product name and dropping matches to the query's own name leaves 12,193 labelled queries "
         "(`simsearch/labels.py`).")
     say("- This is real shopper behaviour, so it can serve as weak relevance labels. It is never used as a feature, "
-        "or the model would be scored on its own input. Note: 'bought together' includes complements (jeans with a "
-        "T-shirt), not only alternatives.")
+        "or the model would be scored on its own input. Note: 'also bought' is mostly same-category "
+        "alternatives, with some complements mixed in.")
 
     say("\n## 11. Text: which fields describe the product?")
     words = lambda s: set(re.findall(r"[a-z0-9]+", str(s or "").lower()))  # noqa: E731

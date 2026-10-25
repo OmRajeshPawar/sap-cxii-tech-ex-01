@@ -42,7 +42,7 @@ def main():
     cases.append({"id": TSHIRT, "title": "Why the type penalty exists",
                   "teaser": "A T-shirt that would recommend jeans",
                   "note": f"Without the type penalty, the first result for this striped T-shirt is \"{short(before[0])}\": "
-                          f"shoppers buy them together, and the weights are learned from co-purchases. Grouping by "
+                          f"they share the brand and much of the name, and nothing in the score knows jeans aren't a T-shirt. Grouping by "
                           f"exact name alone would also show {repeats} extra size{'s' if repeats != 1 else ''} of a "
                           f"product already listed. The served model subtracts {penalty:.2f} when a result's known "
                           f"category differs and shows one listing per product, so #1 is \"{short(after[0])}\". "
@@ -56,10 +56,10 @@ def main():
         hits = [i for i in top if cat.family_keys[i] in fam[q]]
         if cat.image_urls[q] and cat.categories[q] and all(cat.categories[c] == cat.categories[q] for c in top) and hits:
             cases.append({"id": cat.ids[q], "title": "A strong match",
-                          "teaser": "Five alternatives, one bought with it",
+                          "teaser": "Five alternatives, one its buyers also bought",
                           "note": f"A held-out test query (not used for tuning or validation). All five results are in the same "
-                                  f"category as the query, and \"{short(hits[0])}\" is one shoppers actually "
-                                  f"bought with it. The bars show the photo and the text doing most of the work."})
+                                  f"category as the query, and \"{short(hits[0])}\" is one its buyers "
+                                  f"also bought. The bars show the photo and the text doing most of the work."})
             break
 
     no_photo = [i for i in range(len(cat)) if not served.has_data[BLOCKS.index("image"), i] and cat.brands[i]

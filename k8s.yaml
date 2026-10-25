@@ -29,7 +29,7 @@ spec:
       securityContext: {runAsNonRoot: true, runAsUser: 10001}
       containers:
         - name: api
-          image: product-similarity:0dfd97102317   # = config/manifest.json model_version
+          image: product-similarity:70c8e71f6bdf   # = config/manifest.json model_version
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8000

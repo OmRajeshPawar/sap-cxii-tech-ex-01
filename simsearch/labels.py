@@ -1,7 +1,7 @@
 """Weak relevance labels and offline ranking metrics (D16-D17).
 
 The dataset has no "similar product" ground truth, but 24k rows carry
-`other_items_customers_buy`: names of items shoppers bought alongside this one.
+`other_items_customers_buy`: names of other items this product's buyers also bought.
 Where those names match products in the catalogue, they are behavioural evidence of
 relatedness, so they serve as weak positives. They are never used as features (no leakage).
 """

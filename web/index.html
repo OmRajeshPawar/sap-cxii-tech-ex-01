@@ -151,7 +151,7 @@
         <input type="range" id="penalty" min="0" max="0.5" step="0.01" aria-label="Product-type penalty" style="width:100%">
         <p class="hint">Subtracted from the score of a result whose known category differs from this product's (chosen on validation queries).</p>
         <h3>Similarity weights</h3>
-        <p class="hint">Learned from what shoppers bought: a random search over the eight weights, scored on 1,000 tuning products by how high the items shoppers actually bought rank in the top 10. List price is close to zero because it adds almost nothing once sales price is used.</p>
+        <p class="hint">Learned from shopping behaviour: a random search over the eight weights, scored on 1,000 tuning products by how high the items their buyers also bought rank in the top 10. List price is close to zero because it adds almost nothing once sales price is used.</p>
         <div id="sliders"></div>
       </div>
     </aside>
@@ -175,7 +175,7 @@
     <div class="meta" id="insight-meta"></div>
     <div class="cards">
       <div class="panel"><h3>Are the results real alternatives?</h3><p class="meta" id="human-meta"></p><div id="human"></div></div>
-      <div class="panel"><h3>Does the top 10 include what shoppers actually bought?</h3><p class="meta" id="base-meta"></p><div id="base"></div></div>
+      <div class="panel"><h3>Does the top 10 include what buyers also bought?</h3><p class="meta" id="base-meta"></p><div id="base"></div></div>
     </div>
   </section>
 </main>
@@ -360,7 +360,7 @@ function renderInsight(model) {
     window.MODEL_BADGES = [`<span class="badge">Real alternatives <b>${pct(h.substitute_share.served)}</b> (text search ${pct(h.substitute_share.text_only)})</span>`];
   }
   if (q.served) {
-    $("base-meta").textContent = `${ev.split.fresh_test.toLocaleString()} test products whose page lists what shoppers bought with them. Share where the top 10 contains at least one of those products:`;
+    $("base-meta").textContent = `${ev.split.fresh_test.toLocaleString()} test products whose page lists other items their buyers also bought. Share where the top 10 contains at least one of those products:`;
     $("base").innerHTML = bars([{label: "Text search", value: q.text_only.hit_rate, hi: 1},
                                 {label: "Hand-set weights", value: q.hand_set_prior.hit_rate, hi: 1},
                                 {label: "This model", value: q.served.hit_rate, strong: true, hi: 1}], pct);
