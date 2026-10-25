@@ -16,7 +16,7 @@ on 30,000 Amazon fashion listings, served by FastAPI, shipped as a Docker image 
 | | Text-only TF-IDF | Hand-set weights | **This model** |
 |---|---|---|---|
 | Results that are a real alternative (199 results checked by hand, blind to the system) | 87.3% | – | **96.8%** |
-| Top 10 contains a product shoppers actually bought (6,561 held-out products) | 56.2% | 61.1% | **64.4%** |
+| Top 10 contains an item its buyers also bought (6,561 held-out products) | 56.2% | 61.1% | **64.4%** |
 | Latency, exact search over the full catalogue | | | **1.1 ms** in-process; **2.8 ms** p50 over HTTP from the Docker image on a 2-vCPU runner |
 
 Every measure is defined in plain English in [DESIGN.md](DESIGN.md#how-quality-is-measured).
