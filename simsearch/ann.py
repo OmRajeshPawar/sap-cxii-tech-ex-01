@@ -1,4 +1,4 @@
-"""Bonus: approximate nearest-neighbour candidates with HNSW (D19).
+"""Bonus: approximate nearest-neighbour candidates with HNSW (D23).
 
 HNSW: Malkov & Yashunin, "Efficient and robust approximate nearest neighbor search using
 Hierarchical Navigable Small World graphs", IEEE TPAMI 2020 (arXiv:1603.09320).
@@ -11,7 +11,7 @@ from scipy import sparse
 from sklearn.decomposition import TruncatedSVD
 from sklearn.preprocessing import normalize
 
-SVD_DIMS = 256      # recall is limited by the SVD, not HNSW: more dims raised it, efSearch did not (D19)
+SVD_DIMS = 256      # recall is limited by the SVD, not HNSW: more dims raised it, efSearch did not (D23)
 HNSW_M = 32         # graph degree: higher = better recall, more memory
 EF_CONSTRUCTION = 200
 EF_SEARCH = 200     # search breadth; beyond the candidate pool size it made no measurable difference

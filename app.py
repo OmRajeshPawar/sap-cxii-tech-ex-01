@@ -1,4 +1,4 @@
-"""FastAPI service: GET /find_similar_products (D20-D21), plus health, readiness, status and metrics (D27)."""
+"""FastAPI service: GET /find_similar_products (D24-D25), plus health, readiness, status and metrics (D27)."""
 import logging
 import re
 import threading
@@ -86,8 +86,10 @@ def status() -> dict:
     coverage = float(engine.has_data[BLOCKS.index("image")].mean())
     manifest = STATE["manifest"]
     reasons = [f"image embeddings cover {coverage:.0%} of products (expected ~99.5%)"] if coverage < 0.9 else []
-    if manifest and not manifest.get("verified"):
+    if manifest and (manifest.get("mismatched") or manifest.get("missing")):
         reasons.append(f"artifacts differ from config/manifest.json: {manifest.get('mismatched') or manifest.get('missing')}")
+    if manifest and manifest.get("dependencies"):
+        reasons.append(f"installed libraries differ from requirements.txt: {manifest['dependencies']}")
     with LOCK:
         lat = np.array(STATE["latency_ms"]) if STATE["latency_ms"] else None
         requests = dict(STATE["requests"])
@@ -166,7 +168,7 @@ def require_product(product_id: str) -> None:
 @app.get("/find_similar_products")
 def get_similar_products(
     product_id: str = Query(..., min_length=1),
-    num_similar: int = Query(10, ge=1, le=100),
+    num_similar: int = Query(10, ge=1, description="how many similar products to return (default 10)"),
     weights: Optional[str] = Query(None, description="optional per-request block weights, e.g. image:0.6,text:0.4"),
     category_penalty: Optional[float] = Query(None, ge=0, le=1,
                                               description="optional override of the category penalty; 0 turns off both "

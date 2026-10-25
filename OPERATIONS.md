@@ -20,10 +20,10 @@ flowchart TD
 
 | Concern | What I built | Where |
 |---|---|---|
-| Which model is running | `model_version` is a hash of the data, the photo embeddings, the model config and the serving code. Every response carries it as `X-Model-Version`, and `python -m simsearch.manifest` writes it into `k8s.yaml` as the image tag | `simsearch/manifest.py`, `config/manifest.json`, `app.py` |
-| Is it the model I evaluated | At start-up the service re-hashes the files it loaded and compares them with the manifest. A mismatch makes the instance degraded | `/api/status` (`manifest_verified`, `degraded_reasons`) |
+| Which model is running | `model_version` is a hash of the data, the photo embeddings, the model config, the serving code and the pinned library versions in `requirements.txt`. Every response carries it as `X-Model-Version`, and `python -m simsearch.manifest` writes it into `k8s.yaml` as the image tag | `simsearch/manifest.py`, `config/manifest.json`, `app.py` |
+| Is it the model I evaluated | At start-up the service re-hashes the files it loaded, checks every installed library against its pin, and compares both with the manifest. Any difference makes the instance degraded | `/api/status` (`manifest_verified`, `degraded_reasons`) |
 | Missing data | Photo coverage is measured at start-up. Below 90% the instance reports itself degraded, and the demo warns that the saved quality numbers do not describe it | `/api/status`, demo header |
-| Requests nobody can answer | Weights that select only attributes the product has no data for return 422, naming the attributes it does have, instead of a ranking of zeros | `engine.find_similar_products` (D23) |
+| Requests nobody can answer | Weights that select only attributes the product has no data for return 422, naming the attributes it does have, instead of a ranking of zeros | `engine.find_similar_products` (D26) |
 | Health | `/health` for start-up and liveness. `/ready` returns 503 while degraded, so a pod that isn't serving the evaluated model gets no traffic. The image and manifest set a non-root user (UID 10001) and a read-only root filesystem; CI builds and smoke-tests the image | `k8s.yaml`, `Dockerfile`, `app.py` |
 | Metrics | Prometheus text: requests by route and status (unmatched paths count as route "other"), latency p50 and p95, the degraded flag, photo coverage and model info | `/metrics` |
 | Live quality | Two signals from traffic at the default settings. Requests that override the weights or the penalty are excluded, so experiments cannot move them. The wrong-type share is, among served results where both leaf categories are known, the share whose category differs from the query's. It tracks the category rule's own target, so it is a regression signal for that rule, compared with its own baseline. It is not a quality score. Catalogue exposure is the share of the catalogue recommended at least once since the process started. It can only grow within a process, so on its own it says nothing about a trend; a weekly view would need the set exported or reset per window (proposed) | `/metrics`, `/api/status` (`live_quality`) |
@@ -58,7 +58,7 @@ these hold:
   stays above −2 points).
 - The share of labelled results called a wrong product type or a duplicate is not higher.
 - Co-purchase nDCG@10 falls by no more than 0.02. It measures "related", and a small loss is the expected price of
-  preferring substitutes (D24).
+  preferring substitutes (D19).
 - The model passes CI, and its manifest verifies.
 
 Shadow test, one week. Run the candidate next to the live model on real product-page requests without showing

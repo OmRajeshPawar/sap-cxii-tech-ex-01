@@ -136,6 +136,8 @@
     <aside class="panel">
       <div class="query" id="query"><div class="empty">Pick a product above.</div></div>
       <div class="controls">
+        <h3>Results to show <span class="val" id="v-count">10</span></h3>
+        <input type="range" id="count" min="1" max="50" step="1" value="10" aria-label="Number of similar products" style="width:100%">
         <h3>Ranking</h3>
         <div class="presets" id="presets">
           <button data-preset="served" aria-pressed="true">Served</button>
@@ -149,7 +151,7 @@
         <input type="range" id="penalty" min="0" max="0.5" step="0.01" aria-label="Product-type penalty" style="width:100%">
         <p class="hint">Subtracted from the score of a result whose known category differs from this product's (chosen on validation queries).</p>
         <h3>Similarity weights</h3>
-        <p class="hint">Learned from what shoppers bought: a random search over the eight weights, scored by nDCG@10 on 1,000 tuning queries. List price is close to zero because it adds almost nothing once sales price is used.</p>
+        <p class="hint">Learned from what shoppers bought: a random search over the eight weights, scored on 1,000 tuning products by how high the items shoppers actually bought rank in the top 10. List price is close to zero because it adds almost nothing once sales price is used.</p>
         <div id="sliders"></div>
       </div>
     </aside>
@@ -172,9 +174,8 @@
     <h2>How the model was chosen and checked</h2>
     <div class="meta" id="insight-meta"></div>
     <div class="cards">
-      <div class="panel"><h3>1 · Useful alternatives (my blind labels)</h3><p class="meta" id="human-meta"></p><div id="human"></div></div>
-      <div class="panel"><h3>2 · Co-purchase proxy, fresh test queries</h3><p class="meta" id="base-meta"></p><div id="base"></div></div>
-      <div class="panel"><h3>3 · What each attribute adds</h3><p class="meta">Proxy nDCG@10 lost when one block is switched off. Lines: 95% bootstrap CI.</p><div id="abl"></div></div>
+      <div class="panel"><h3>Are the results real alternatives?</h3><p class="meta" id="human-meta"></p><div id="human"></div></div>
+      <div class="panel"><h3>Does the top 10 include what shoppers actually bought?</h3><p class="meta" id="base-meta"></p><div id="base"></div></div>
     </div>
   </section>
 </main>
@@ -243,7 +244,7 @@ async function loadSimilar(id, note) {
   current = id;
   history.replaceState(null, "", "#" + encodeURIComponent(id));   // shareable link to this product
   if (note !== undefined) $("case-note").innerHTML = note;
-  const params = new URLSearchParams({num_similar: 12});
+  const params = new URLSearchParams({num_similar: parseInt($("count").value, 10)});
   if (!isLearned()) params.set("weights", Object.entries(weights).map(([k, v]) => `${k}:${v}`).join(","));
   if (Math.abs(penalty - policy) > 1e-9) params.set("category_penalty", penalty);
   const ticket = ++latest;   // only the newest request may paint the page
@@ -350,31 +351,21 @@ function bars(rows, fmt) {
 }
 
 function renderInsight(model) {
-  const ev = model.evaluation || {}, q = ev.quality || {}, sig = ev.significance || {}, h = model.human || {};
-  const names = {text_only: "Text only", hand_set_prior: "Hand-set weights", weights_only: "Learned weights only",
-                 with_grouping: "+ one listing per product", with_category_penalty: "+ category penalty",
-                 served: "+ name words (served)"};
+  const ev = model.evaluation || {}, q = ev.quality || {}, h = model.human || {};
+  const pct = (v) => (100 * v).toFixed(0) + "%";
   if (h.substitute_share) {
-    $("human-meta").textContent = `Share of the results I labelled that I called a real substitute: ${h.labelled_pairs} result pairs from ${h.queries} held-out test queries, labelled blind to the system, rank and category. Line: 95% CI of the served model minus each row.`;
-    const gain = {weights_only: h.served_minus_weights_only, text_only: h.served_minus_text_only};
-    $("human").innerHTML = bars(["text_only", "weights_only", "served"].map((n) => {
-      const d = gain[n], top = h.substitute_share.served;
-      return {label: n === "served" ? "Served" : names[n], value: h.substitute_share[n], strong: n === "served",
-              lo: d ? top - d.ci95[1] : null, hi: d ? top - d.ci95[0] : null};
-    }), (v) => (100 * v).toFixed(0) + "%");
-    window.MODEL_BADGES = [`<span class="badge">Called a substitute <b>${(100 * h.substitute_share.served).toFixed(0)}%</b> (text only ${(100 * h.substitute_share.text_only).toFixed(0)}%)</span>`];
+    $("human-meta").textContent = `${h.labelled_pairs} results from ${h.queries} test products, checked by hand without knowing which system produced them. Share that is a real alternative to the product:`;
+    $("human").innerHTML = bars([{label: "Text search", value: h.substitute_share.text_only, hi: 1},
+                                 {label: "This model", value: h.substitute_share.served, strong: true, hi: 1}], pct);
+    window.MODEL_BADGES = [`<span class="badge">Real alternatives <b>${pct(h.substitute_share.served)}</b> (text search ${pct(h.substitute_share.text_only)})</span>`];
   }
   if (q.served) {
-    $("base-meta").textContent = `nDCG@10 against co-purchase labels on ${ev.split.fresh_test} held-out test queries (no tuning or validation choice used them). Lines: 95% CI of the gap to the served model.`;
-    $("base").innerHTML = bars(Object.keys(names).filter((n) => q[n]).map((n) => {
-      const s = sig[n], v = q[n].ndcg;
-      return {label: names[n], value: v, strong: n === "served", lo: s ? q.served.ndcg - s.ci95[1] : null, hi: s ? q.served.ndcg - s.ci95[0] : null};
-    }), (v) => v.toFixed(3));
-    $("abl").innerHTML = bars(Object.entries(ev.ablation || {}).sort((a, b) => b[1].delta - a[1].delta).map(([b, s]) =>
-      ({label: LABELS[b], value: s.delta, lo: s.ci95[0], hi: s.ci95[1], color: color(b)})), (v) => Math.abs(v) < 0.0005 ? "0.000" : (v > 0 ? "+" : "") + v.toFixed(3));
+    $("base-meta").textContent = `${ev.split.fresh_test.toLocaleString()} test products whose page lists what shoppers bought with them. Share where the top 10 contains at least one of those products:`;
+    $("base").innerHTML = bars([{label: "Text search", value: q.text_only.hit_rate, hi: 1},
+                                {label: "Hand-set weights", value: q.hand_set_prior.hit_rate, hi: 1},
+                                {label: "This model", value: q.served.hit_rate, strong: true, hi: 1}], pct);
   }
-  if (!$("insight-meta").textContent)
-    $("insight-meta").textContent = "Weights were learned from co-purchases; the type penalty was chosen on validation queries; everything below is measured on held-out test queries.";
+  $("insight-meta").textContent = "Measured on products that were never used to learn the weights or choose any setting.";
   $("insight").hidden = false;
 }
 
@@ -391,6 +382,7 @@ async function init() {
   $("go").addEventListener("click", () => search($("q").value.trim()));
   $("q").addEventListener("keydown", (e) => e.key === "Enter" && search($("q").value.trim()));
   $("surprise").addEventListener("click", surprise);
+  $("count").addEventListener("input", (e) => { $("v-count").textContent = e.target.value; reload(); });
   $("penalty").addEventListener("input", (e) => { penalty = parseFloat(e.target.value); $("v-penalty").textContent = penalty.toFixed(2); markPreset(null); reload(); });
   document.querySelectorAll("#presets button").forEach((b) => b.addEventListener("click", () => applyPreset(b.dataset.preset)));
   $("ops").addEventListener("toggle", () => $("ops").open && renderOps());

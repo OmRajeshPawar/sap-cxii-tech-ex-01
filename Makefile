@@ -30,9 +30,6 @@ docker:             ## build and run the container, tagged with the model versio
 human-check:        ## score my hand labels -> results/human_check/human_eval.*
 	python tools/human_check.py
 
-static:             ## the served model's answers for every product in one page -> docs/index.html (checks 300 against the engine)
-	python tools/export_static_demo.py
-
 cases:              ## pick the demo's guided-tour cases -> results/demo_cases.json
 	python tools/demo_cases.py
 
@@ -49,4 +46,4 @@ embed:              ## embed the photos with Marqo-FashionSigLIP -> .cache/embed
 export:             ## PCA to 64-d -> data/image_embeddings.npz (the file the API reads)
 	python tools/export_embeddings.py
 
-.PHONY: install test run analyse evaluate bench manifest tune docker human-check cases static embed-install images embed export
+.PHONY: install test run analyse evaluate bench manifest tune docker human-check cases embed-install images embed export

@@ -1,11 +1,11 @@
 {
-  "model_version": "0d7c43f857c5",
-  "created": "2026-10-24T13:00:03Z",
+  "model_version": "3ddb0908f317",
+  "created": "2026-10-25T11:40:30Z",
   "artifacts": {
     "data": "6cd0dfa83a311533c6c991cc6586d13cc4e94e7d6fb799d2d00e5aa2a4bf8f10",
     "image_embeddings": "f9be1e20d3a5f6d4f35b611e624502bb058e02639f06888d340eb4e8bdc77718",
     "model_config": "70f76ce3284252edfb3f992e46ab687787d528caa2f32ce7d99df1ccba2c0839",
-    "serving_code": "5b8cfe299519b3160ea856ffe6c4e567f7234fa620d4b2d65637e401cd7b04e3"
+    "serving_code": "46bf0cc0d89482f8af9a311a5475cedbc019a74c2b4e5c42502c4a09927e5799"
   },
   "image_encoder": {
     "model": "fashion_siglip",
@@ -35,5 +35,5 @@
     "name_penalty_chosen_by": "60 + 100 products without a category (results/name_policy.json)"
   },
   "evaluation": "results/evaluation.json (co-purchase proxy, held-out test) and results/human_check/human_eval.json (hand labels)",
-  "splits": "simsearch/labels.py query_splits(seed=0) + fresh_queries; see DESIGN.md D17, D25"
+  "splits": "simsearch/labels.py query_splits(seed=0) + fresh_queries; see DESIGN.md D17, D20"
 }

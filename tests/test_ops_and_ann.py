@@ -1,7 +1,4 @@
-"""The model manifest, the static demo's version and the HNSW index."""
-import re
-from pathlib import Path
-
+"""The model manifest (artifacts, code and pinned libraries) and the HNSW index."""
 import numpy as np
 import pytest
 from scipy import sparse
@@ -42,11 +39,11 @@ def test_hnsw_candidates_cover_the_exact_neighbours(seed):
     assert np.mean(recall) > 0.95
 
 
-def test_static_demo_page_matches_the_served_model_version():
-    """docs/index.html stores precomputed answers; it must be regenerated whenever the model version changes."""
-    page = Path(__file__).resolve().parent.parent / "docs" / "index.html"
-    if not page.exists():
-        pytest.skip("static demo not generated")
-    text = page.read_text(encoding="utf-8")
-    stored = re.search(r'"version":"(\w+)"', text).group(1)
-    assert stored == manifest.verify()["model_version"], "run python tools/export_static_demo.py"
+def test_a_library_version_that_differs_from_the_pins_is_reported(monkeypatch):
+    class Pins:   # a stand-in requirements.txt with a wrong pin
+        def read_text(self, encoding=None):
+            return "numpy==0.0.1   # deliberately wrong\n"
+    assert manifest.dependency_mismatches() == []          # this environment matches requirements.txt
+    monkeypatch.setattr(manifest, "REQUIREMENTS", Pins())
+    drift = manifest.verify()
+    assert not drift["verified"] and drift["dependencies"] and drift["dependencies"][0].startswith("numpy ")

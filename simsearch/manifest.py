@@ -4,8 +4,9 @@ exactly what it is serving and whether that matches what was evaluated.
     python -m simsearch.manifest   -> config/manifest.json and the k8s.yaml image tag (run after any model or code change)
 
 The model version is a short hash over the artifact hashes: change the data, the image embeddings, the
-weights/policy file or the serving code and the version changes. At start-up the service re-hashes the files it actually
-loaded and compares them with the manifest (`verify`); a mismatch or a missing file is reported as degraded.
+weights/policy file, the serving code or a pinned library version and the version changes. At start-up the service
+re-hashes the files it loaded, checks the installed libraries against requirements.txt, and compares both with the
+manifest (`verify`); any difference is reported as degraded and /ready returns 503.
 """
 import hashlib
 import json
@@ -33,8 +34,29 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-# The serving code is part of the model: changing the scoring or the API must change the version (and the image tag)
-SERVING_CODE = ["app.py", "demo.py", "web/index.html", "simsearch/*.py"]
+# The serving code is part of the model: changing the scoring or the API must change the version (and the image tag).
+# requirements.txt pins every library the service imports, so a dependency upgrade is a new version too.
+SERVING_CODE = ["app.py", "demo.py", "web/index.html", "simsearch/*.py", "requirements.txt"]
+REQUIREMENTS = ROOT / "requirements.txt"
+
+
+def dependency_mismatches() -> list:
+    """Installed library versions that differ from the pins in requirements.txt (empty when the environment matches).
+    The pins are hashed into the version, so this check ties the running environment to the version as well."""
+    from importlib.metadata import PackageNotFoundError, version
+    out = []
+    for line in REQUIREMENTS.read_text(encoding="utf-8").splitlines():
+        spec = line.split("#")[0].strip()
+        if "==" not in spec:
+            continue
+        name, pinned = (part.strip() for part in spec.split("=="))
+        try:
+            installed = version(name)
+        except PackageNotFoundError:
+            installed = "missing"
+        if installed != pinned:
+            out.append(f"{name} {installed} (pinned {pinned})")
+    return out
 
 
 def code_hash() -> str:
@@ -67,7 +89,7 @@ def build() -> dict:
         "weights": model["weights"],
         "policy": model.get("policy", {}),
         "evaluation": "results/evaluation.json (co-purchase proxy, held-out test) and results/human_check/human_eval.json (hand labels)",
-        "splits": "simsearch/labels.py query_splits(seed=0) + fresh_queries; see DESIGN.md D17, D25",
+        "splits": "simsearch/labels.py query_splits(seed=0) + fresh_queries; see DESIGN.md D17, D20",
     }
     MANIFEST.write_text(json.dumps(manifest, indent=2))
     # Deploy exactly this version: point the Kubernetes image tag at it (tests/test_service.py checks they match)
@@ -82,8 +104,9 @@ def verify() -> dict:
     hashes = current_hashes()
     expected = json.loads(MANIFEST.read_text()) if MANIFEST.exists() else {}
     want = expected.get("artifacts", {})
+    dependencies = dependency_mismatches()
     return {"model_version": version_of(hashes), "manifest_version": expected.get("model_version"),
-            "verified": bool(want) and want == hashes,
+            "verified": bool(want) and want == hashes and not dependencies, "dependencies": dependencies,
             "mismatched": sorted(k for k in hashes if want and want.get(k) != hashes[k]),
             "missing": sorted(k for k, h in hashes.items() if h == "missing")}
 

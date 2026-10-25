@@ -17,7 +17,8 @@ MODEL_FILE = Path(__file__).resolve().parent.parent / "config" / "model.json"
 # Hand-set prior (D9): the fallback, and the baseline the learned weights must beat (D18)
 PRIOR_WEIGHTS = {"text": 0.35, "image": 0.15, "brand": 0.15, "price": 0.10, "list_price": 0.05,
                  "colour": 0.08, "rating": 0.06, "weight": 0.06}
-CACHE_SIZE = 4096  # (product, k) results kept per process (D20)
+CACHE_SIZE = 4096  # (product, k) results kept per process (D24)
+CACHE_MAX_K = 100  # larger requests are computed directly, so a few huge lists cannot fill the cache
 DENSE_BLOCKS = ("image",)  # stored as a dense array: 64 values per product, a sparse format only adds overhead
 
 
@@ -84,16 +85,16 @@ class SimilarityEngine:
         # The same layout per block, unweighted, for weight tuning and explanations
         self._block_t = {b: self.blocks[b].T.tocsr() for b in BLOCKS if b not in DENSE_BLOCKS}
         self._block_dense = {b: self.blocks[b].toarray() for b in DENSE_BLOCKS}
-        # Which blocks hold data for each product, shape (n_blocks, n): drives the no-signal check (D23)
+        # Which blocks hold data for each product, shape (n_blocks, n): drives the no-signal check (D26)
         self.has_data = np.vstack([np.diff(self.blocks[b].indptr) > 0 if b not in DENSE_BLOCKS
                                    else self._block_dense[b].any(axis=1) for b in BLOCKS])
         self.groups = product_groups(cat, self._block_dense["image"])
-        # Substitute policy (D24): a known leaf category that differs from the query's known one costs this much
+        # Substitute policy (D19): a known leaf category that differs from the query's known one costs this much
         self.category_penalty = float(category_penalty)
         codes = {c: i for i, c in enumerate(sorted({c for c in cat.categories if c}))}
         self.category_code = np.array([codes[c] if c else -1 for c in cat.categories])
         self._category_known = self.category_code >= 0
-        # Where a category is missing, the wearer and product-type words in the names stand in for it (D28)
+        # Where a category is missing, the wearer and product-type words in the names stand in for it (D22)
         self.name_penalty = float(name_penalty)
         self._wearer, self._kind = (word_masks(cat.names, vocab) for vocab in (WEARER_WORDS, TYPE_WORDS))
         self.ann = None
@@ -118,9 +119,9 @@ class SimilarityEngine:
     def type_penalty(self, q: int, penalty: Optional[float] = None) -> np.ndarray:
         """Penalty per product for being a different kind of product from q.
 
-        Both leaf categories known: `penalty` (the category penalty, D24) if they differ. Either category unknown
+        Both leaf categories known: `penalty` (the category penalty, D19) if they differ. Either category unknown
         (15% of products have none): the name penalty if the names mention wearers with nothing in common (men's vs
-        women's) or product types with nothing in common (t-shirt vs jeans), D28. Otherwise 0.
+        women's) or product types with nothing in common (t-shirt vs jeans), D22. Otherwise 0.
         An explicit `penalty` of 0 (a request's `category_penalty=0`) turns both rules off.
         """
         off = penalty is not None and penalty == 0
@@ -171,7 +172,7 @@ class SimilarityEngine:
     def similar_indices(self, q: int, k: int) -> List[int]:
         if self.ann is None:
             return self.rank(self.scores(q) - self.type_penalty(q), q, k)
-        # Two-stage (D19): HNSW proposes candidates, exact scores re-rank them
+        # Two-stage (D23): HNSW proposes candidates, exact scores re-rank them
         from .ann import CANDIDATE_POOL
         candidates = self.ann.candidates(q, min(max(CANDIDATE_POOL, 4 * k + 10), len(self.cat)))
         exact = self.matrix[candidates] @ self.matrix[q].toarray().ravel() - self.type_penalty(q)[candidates]
@@ -204,18 +205,20 @@ class SimilarityEngine:
     def find_similar_products(self, product_id: str, num_similar: int,
                               weights: Optional[Dict[str, float]] = None,
                               category_penalty: Optional[float] = None) -> List[str]:
-        """Default settings use the cached path; per-request `weights` re-mix the block scores (D20) and
-        `category_penalty` overrides the substitute policy (D24)."""
+        """Default settings use the cached path; per-request `weights` re-mix the block scores (D24) and
+        `category_penalty` overrides the substitute policy (D19)."""
         q = self.index[product_id]  # KeyError -> 404 in the API
         if num_similar < 1:
             raise ValueError("num_similar must be at least 1")
         if category_penalty is not None and not 0 <= category_penalty <= 1:
             raise ValueError("category_penalty must be between 0 and 1")
         if not weights and category_penalty is None:
-            return list(self._cached(q, num_similar))
+            if num_similar <= CACHE_MAX_K:
+                return list(self._cached(q, num_similar))
+            return list(self._similar_ids(q, num_similar))
         mix = validate_weights(weights or self.weights)
         if not (mix * self.has_data[:, q]).any():
-            # D23: every selected block is empty for this product, so every score would be 0 and the
+            # D26: every selected block is empty for this product, so every score would be 0 and the
             # "ranking" would be tie-breakers only. Refuse instead of returning confident-looking noise.
             raise ValueError(f"product {product_id} has no data for the selected block(s) "
                              f"{[b for j, b in enumerate(BLOCKS) if mix[j] > 0]}; it has data for "

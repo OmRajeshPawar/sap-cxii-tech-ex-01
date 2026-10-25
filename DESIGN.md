@@ -5,7 +5,7 @@ Numbers come from `results/` and `analysis/`; a "development measurement" is a o
 
 Weights are learned on 1,000 tuning queries. Every other choice (photo encoder, penalties, experiments) is made on
 2,000 validation queries or on separate products, against a decision rule written in advance. Reported quality comes
-from 6,561 test queries that share no product with any of them (D25).
+from 6,561 test queries that share no product with any of them (D20).
 
 ## A. Data
 
@@ -34,7 +34,7 @@ compare those sets as a weak signal, and the weight search agreed it is weak: co
 
 ## C. Photos
 
-D10. I chose Marqo-FashionSigLIP after comparing four encoders on the same photos, the same PCA and the same
+D10. I chose Marqo-FashionSigLIP [3] after comparing four pre-trained encoders (ResNet-50 [6], DINOv2 [5], SigLIP 2 [4] and Marqo-FashionSigLIP) on the same photos, the same PCA and the same
 validation queries, re-learning the weights for each (development measurement). The rule, fixed before running: the
 highest full-model validation nDCG@10 wins, and a near-tie (within 1%) goes to the cheaper encoder.
 
@@ -48,7 +48,7 @@ highest full-model validation nDCG@10 wins, and a near-tie (within 1%) goes to t
 
 FashionSigLIP beat SigLIP 2 by +0.006, CI [+0.001, +0.012], which is 1.7% relative. SigLIP 2 is better on photos
 alone (0.187 against 0.179), but FashionSigLIP adds more of what the text block doesn't already capture, which is why
-I compared encoders inside the full model. Both SigLIP models are listed as Apache-2.0 on their model cards.
+I compared encoders inside the full model. Both SigLIP models are listed as Apache-2.0 on their model cards. Embeddings are computed with open_clip from `hf-hub:Marqo/marqo-fashionSigLIP`.
 
 | ID | Decision | Why, and what I rejected |
 |---|---|---|
@@ -67,18 +67,17 @@ I compared encoders inside the full model. Both SigLIP models are listed as Apac
 
 | ID | Decision | Why, and what I rejected |
 |---|---|---|
-| D16 | Weak labels from `other_items_customers_buy` | There is no ground truth for "similar". Co-purchased names matched back to the catalogue give 12,193 labelled queries at name level (11,410 at product-family level). I never use them as a feature. They have two biases: they reward complements, and they lean on wording (31% of pairs share at least half their name words; `results/evaluation.json`, `labels`). That is why I added a hand-labelled check (D26) |
-| D17 | Three fixed query sets, paired bootstrap CIs and a drop-one ablation | Tune 1,000, validation 2,000, and a fresh test set (D25). Every comparison is a paired bootstrap over queries with 2,000 resamples. Metrics: nDCG, Recall, HitRate and MRR at 10. Baselines: random products from the same category, text-only, hand-set weights. |
+| D16 | Weak labels from `other_items_customers_buy` | There is no ground truth for "similar". Co-purchased names matched back to the catalogue give 12,193 labelled queries at name level (11,410 at product-family level). I never use them as a feature. They have two biases: they reward complements, and they lean on wording (31% of pairs share at least half their name words; `results/evaluation.json`, `labels`). That is why I added a hand-labelled check (D21) |
+| D17 | Three fixed query sets, paired bootstrap CIs and a drop-one ablation | Tune 1,000, validation 2,000, and a fresh test set (D20). Every comparison is a paired bootstrap over queries with 2,000 resamples. Metrics: nDCG, Recall, HitRate and MRR at 10. Baselines: random products from the same category, text-only, hand-set weights. |
 | D18 | Weights by coarse-to-fine random search on the simplex | 400 Dirichlet samples plus 3 anchors, then 200 samples around the best, scored by nDCG@10 on the tuning queries, in a few minutes on a CPU. The result: photo 0.40, text 0.34, brand 0.10, colour 0.06, price 0.04, rating 0.03, weight 0.01, list price 0.00. Grid search is too expensive in 8 dimensions. LambdaMART can't be supported by about 2 labels per query, and it would lose the explainable linear form |
-| D24 | "Similar" means something to buy instead, enforced with a product-type penalty of λ = 0.15 | Co-purchase weights reward complements: a striped T-shirt's first result was jeans. When both leaf categories are known and differ, I subtract λ; an unknown category is never penalised. I chose λ on 100 validation queries whose top-5 results were rated against a written substitute rubric, by a rule I wrote first: the most substitutes in the top 5 wins, and anything within 1 point of the best counts as a tie that goes to the smallest λ. Substitutes rose from 63.2% at 0 to 68.8% at 0.15 (+5.6 [+3.2, +8.0]) and flattened beyond 0.20 (`results/substitute_policy.json`). The co-purchase proxy drops slightly, because I remove complements on purpose. I rejected a hard same-category filter (it fails the 15% without a category) and a learned category block (co-purchase would weight it for complements) |
-| D25 | Test queries are fresh and family-disjoint, and labels are family-level | No test query shares a product group (name, family or photo) with any tuning, validation or early-check query. The early-check set is 2,000 queries I looked at during development, so I keep them out. Another size of a co-purchased item counts as the same correct answer. |
-| D26 | A hand-labelled check of the ranking | The co-purchase proxy rewards complements, so I labelled results myself. I labelled 199 query-result pairs from 94 held-out test queries, in random order pooled across three systems, blind to the system, the rank and the category. Labels: substitute, partial, duplicate, not (definitions in `tools/human_check.py`). I called 96.8% of the served model's labelled results substitutes against 87.3% for text-only (+9.5 [+3.5, +16.3] points) and 96.6% for learned weights alone (`results/human_check/human_eval.md`) |
-| D28 | Where a category is missing, wearer and product-type words in the names stand in for it, with a penalty of μ = 0.10 | Products without a category still name their wearer and type: men's vs women's, T-shirt vs jeans. Checked against rated pairs, a gender-word clash between two names meant "substitute" only 8% of the time, against 64% otherwise. For products with a category the category penalty already covers this (validation gain +0.0), so the rule applies only when either product's category is unknown. I chose μ on 60 products without a category (+5.0 [+1.3, +9.3]) and confirmed it on 100 fresh ones (+2.0 [+0.2, +4.2]), by a rule written first: at least 1 point with a CI above zero. Across all 242 such products in four samples the gain is +2.7 [+1.2, +4.4] (`results/name_policy.json`). The word lists are short and visible in `simsearch/data.py`. I rejected a hard filter, because a very close match should be able to stay |
+| D19 | "Similar" means something to buy instead, enforced with a product-type penalty of λ = 0.15 | Co-purchase weights reward complements: a striped T-shirt's first result was jeans. When both leaf categories are known and differ, I subtract λ; an unknown category is never penalised. I chose λ on 100 validation queries whose top-5 results were rated against a written substitute rubric, by a rule I wrote first: the most substitutes in the top 5 wins, and anything within 1 point of the best counts as a tie that goes to the smallest λ. Substitutes rose from 63.2% at 0 to 68.8% at 0.15 (+5.6 [+3.2, +8.0]) and flattened beyond 0.20 (`results/substitute_policy.json`). The co-purchase proxy drops slightly, because I remove complements on purpose. I rejected a hard same-category filter (it fails the 15% without a category) and a learned category block (co-purchase would weight it for complements) |
+| D20 | Test queries are fresh and family-disjoint, and labels are family-level | No test query shares a product group (name, family or photo) with any tuning, validation or early-check query. The early-check set is 2,000 queries I looked at during development, so I keep them out. Another size of a co-purchased item counts as the same correct answer. |
+| D21 | A hand-labelled check of the ranking | The co-purchase proxy rewards complements, so I labelled results myself. I labelled 199 query-result pairs from 94 held-out test queries, in random order pooled across three systems, blind to the system, the rank and the category. Labels: substitute, partial, duplicate, not (definitions in `tools/human_check.py`). I called 96.8% of the served model's labelled results substitutes against 87.3% for text-only (+9.5 [+3.5, +16.3] points) and 96.6% for learned weights alone (`results/human_check/human_eval.md`) |
+| D22 | Where a category is missing, wearer and product-type words in the names stand in for it, with a penalty of μ = 0.10 | Products without a category still name their wearer and type: men's vs women's, T-shirt vs jeans. Checked against rated pairs, a gender-word clash between two names meant "substitute" only 8% of the time, against 64% otherwise. For products with a category the category penalty already covers this (validation gain +0.0), so the rule applies only when either product's category is unknown. I chose μ on 60 products without a category (+5.0 [+1.3, +9.3]) and confirmed it on 100 fresh ones (+2.0 [+0.2, +4.2]), by a rule written first: at least 1 point with a CI above zero. Across all 242 such products in four samples the gain is +2.7 [+1.2, +4.4] (`results/name_policy.json`). The word lists are short and visible in `simsearch/data.py`. I rejected a hard filter, because a very close match should be able to stay |
 
 ## F. Approximate nearest neighbours (bonus)
 
-D19. HNSW through FAISS, in two stages and opt-in. HNSW is from Malkov and Yashunin (IEEE TPAMI 2020,
-arXiv:1603.09320). Because HNSW needs dense vectors, truncated SVD first compresses the sparse matrix to 256
+D23. HNSW through FAISS, in two stages and opt-in. HNSW is from Malkov and Yashunin [1], run with FAISS [2]. Because HNSW needs dense vectors, truncated SVD first compresses the sparse matrix to 256
 dimensions; HNSW then proposes 200 candidates and the exact score re-ranks them. At 30,000 products it finds 96.2% of
 the exact top 10 in 1.05 ms against 1.12 ms (`results/evaluation.md`). At this size exact search is
 already about a millisecond, so it is the default and `SEARCH_MODE=hnsw` turns HNSW on. I chose FAISS over hnswlib because it offers other
@@ -89,10 +88,37 @@ benchmarks. IVF-PQ is built for billion-scale catalogues. OPERATIONS.md describe
 
 | ID | Decision | Why, and what I rejected |
 |---|---|---|
-| D20 | Per-request weights (`?weights=`) and an LRU cache | The brief asks for configurable weighting. I validate the weights: an unknown block, a negative value, NaN, overflow or a repeated name returns 422. A shared Redis cache isn't needed for a query that takes about a millisecond |
-| D21 | The HTTP contract | 404 for an unknown id (checked explicitly, so an internal error can never look like a missing product), 422 for invalid input, `num_similar` between 1 and 100, the index built at start-up rather than on the first request, and a JSON 500 with a request id for anything unexpected |
-| D23 | A request with no usable signal is refused | `weights=image:1` on a product without a photo would rank by tie-breakers alone, so it returns 422 and names the attributes the product does have |
-| D27 | The service shows which model it is serving | `config/manifest.json` hashes the data, embeddings, model config and serving code into a model version. It comes back as `X-Model-Version`, it is the Kubernetes image tag, and CI and a test check it. A mismatch or low photo coverage makes the instance degraded, and `/ready` then returns 503. `/metrics` exports latency, request counts, coverage, the live wrong-type share and catalogue exposure. MLflow would make sense with several models; for one, a manifest is enough |
+| D24 | Per-request weights (`?weights=`) and an LRU cache | The brief asks for configurable weighting. I validate the weights: an unknown block, a negative value, NaN, overflow or a repeated name returns 422. A shared Redis cache isn't needed for a query that takes about a millisecond |
+| D25 | The HTTP contract | `num_similar` defaults to 10 and has no upper limit; a request for more products than exist returns every distinct product. 404 for an unknown id (checked explicitly, so an internal error can never look like a missing product), 422 for invalid input, the index built at start-up rather than on the first request, and a JSON 500 with a request id for anything unexpected. Results for up to 100 products are cached; larger lists are computed directly so they cannot crowd the cache |
+| D26 | A request with no usable signal is refused | `weights=image:1` on a product without a photo would rank by tie-breakers alone, so it returns 422 and names the attributes the product does have |
+| D27 | The service shows which model it is serving | `config/manifest.json` hashes the data, embeddings, model config, serving code and the pinned library versions in `requirements.txt` into a model version. It comes back as `X-Model-Version` and is the Kubernetes image tag. At start-up the service re-hashes what it loaded and checks every installed library against its pin; any difference makes the instance degraded, and `/ready` then returns 503, so a pod that is not exactly the evaluated model gets no traffic. CI checks the manifest on every push. `/metrics` exports latency, request counts, coverage, the live wrong-type share and catalogue exposure. MLflow would make sense with several models; for one, a manifest is enough |
+
+## How quality is measured
+
+| Measure | In plain English | Why it is used |
+|---|---|---|
+| Substitute share (hand labels) | Of the results checked by hand, the share that is a real alternative to the product | The most direct answer to "are these good alternatives?" |
+| HitRate@10 | The share of test products whose top 10 contains at least one product shoppers actually bought with them | Easy to read: did the list find anything shoppers wanted? |
+| Recall@10 | Of the products shoppers bought with this one, the share that appears in the top 10 | Rewards finding more of them, not just one |
+| MRR@10 | How early the first bought product appears: 1 at position 1, 0.5 at position 2, 0.33 at position 3, 0 if absent | Users look at the top of the list first |
+| nDCG@10 | Like recall, but a hit near the top counts more than a hit at position 10, scaled from 0 (none found) to 1 (all at the top) [7] | The standard ranking score, and the one the weights are tuned on |
+| 95% CI (paired bootstrap) [8] | The range the difference between two systems would fall in if the test were repeated on new products | Shows a gain is real, not noise from which products were picked |
+
+The co-purchase measures use the `other_items_customers_buy` field as weak labels (D16); the hand labels check what
+they cannot, whether a result is a substitute rather than a complement (D21).
+
+## References
+
+1. Y. A. Malkov and D. A. Yashunin. Efficient and robust approximate nearest neighbor search using Hierarchical
+   Navigable Small World graphs. IEEE TPAMI, 2020. [arXiv:1603.09320](https://arxiv.org/abs/1603.09320)
+2. M. Douze et al. The Faiss library. 2024. [arXiv:2401.08281](https://arxiv.org/abs/2401.08281)
+3. Marqo. Marqo-FashionSigLIP, model card, 2024. [huggingface.co/Marqo/marqo-fashionSigLIP](https://huggingface.co/Marqo/marqo-fashionSigLIP);
+   trained with Generalized Contrastive Learning, T. Zhu et al., 2024, [arXiv:2404.08535](https://arxiv.org/abs/2404.08535)
+4. M. Tschannen et al. SigLIP 2: Multilingual Vision-Language Encoders. 2025. [arXiv:2502.14786](https://arxiv.org/abs/2502.14786)
+5. M. Oquab et al. DINOv2: Learning Robust Visual Features without Supervision. TMLR, 2024. [arXiv:2304.07193](https://arxiv.org/abs/2304.07193)
+6. K. He, X. Zhang, S. Ren and J. Sun. Deep Residual Learning for Image Recognition. CVPR, 2016. [arXiv:1512.03385](https://arxiv.org/abs/1512.03385)
+7. K. Järvelin and J. Kekäläinen. Cumulated gain-based evaluation of IR techniques. ACM TOIS, 2002.
+8. B. Efron and R. J. Tibshirani. An Introduction to the Bootstrap. Chapman & Hall, 1993.
 
 ## Next steps, in order
 

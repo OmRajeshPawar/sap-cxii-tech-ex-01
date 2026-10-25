@@ -41,7 +41,7 @@ def query_splits(labels: Dict[int, Set[str]], seed: int = 0, n_tune: int = 1000,
 
     tune: learns block weights. val: every other choice (photo encoder, rejected experiments, type penalties),
     drawn from the train side but disjoint from tune. check: an early test sample that was looked at during
-    development, so reported numbers use fresh_queries() instead (D25); it is kept to rebuild the exclusion set.
+    development, so reported numbers use fresh_queries() instead (D20); it is kept to rebuild the exclusion set.
     """
     train, test = train_test_split(labels, seed=seed)
     perm = [int(q) for q in np.random.default_rng(seed).permutation(train)]
@@ -75,7 +75,7 @@ def mean_metrics(rows: List[Dict[str, float]]) -> Dict[str, float]:
     return {m: float(np.mean([r[m] for r in rows])) for m in rows[0]}
 
 
-# ---------- evaluation protocol (D25): product families, family-disjoint fresh test queries ----------
+# ---------- evaluation protocol (D20): product families, family-disjoint fresh test queries ----------
 
 def build_family_labels(cat: Catalogue) -> Dict[int, Set[str]]:
     """Query index -> relevant family keys. Labels work on product families because the service shows one
@@ -93,7 +93,7 @@ def build_family_labels(cat: Catalogue) -> Dict[int, Set[str]]:
 
 
 def fresh_queries(labels: Dict[int, Set[str]], groups: np.ndarray, used: Sequence[int]) -> List[int]:
-    """Labelled queries whose product group shares nothing with any query used before (D25).
+    """Labelled queries whose product group shares nothing with any query used before (D20).
 
     `used` holds every query that has informed a choice or a reported number: tuning, validation and the
     early check sample. Group = same name, family or identical photo (engine.product_groups), so a size variant

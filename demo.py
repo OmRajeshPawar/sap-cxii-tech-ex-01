@@ -61,7 +61,7 @@ def random_product():
 
 
 @router.get("/api/similar/{product_id}")
-def similar(product_id: str, num_similar: int = Query(12, ge=1, le=50), weights: Optional[str] = None,
+def similar(product_id: str, num_similar: int = Query(10, ge=1), weights: Optional[str] = None,
             category_penalty: Optional[float] = Query(None, ge=0, le=1)):
     engine = get_engine()
     if product_id not in engine.index:   # checked explicitly, like the main endpoint

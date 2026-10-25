@@ -79,7 +79,7 @@ def family_key(name) -> str:
     return name_key(SIZE_WORDS.sub(" ", text))
 
 
-# Who a product is for, and what kind of product it is, as written in product names (D28). Used only where a
+# Who a product is for, and what kind of product it is, as written in product names (D22). Used only where a
 # product has no category, so the product-type rule still has something to compare.
 WEARER_WORDS = {"men": "men", "mens": "men", "man": "men", "male": "men", "gents": "men",
                 "women": "women", "womens": "women", "woman": "women", "ladies": "women", "female": "women",

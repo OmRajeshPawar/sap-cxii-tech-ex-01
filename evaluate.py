@@ -1,4 +1,4 @@
-"""Offline evaluation on fresh test queries (D25): co-purchase proxy metrics, baselines, ablation, serving.
+"""Offline evaluation on fresh test queries (D20): co-purchase proxy metrics, baselines, ablation, serving.
 
 Test queries share no product group (same name, family or photo) with any tuning, validation or early-check query:
 tuning, validation, or the early check sample. Labels are co-purchases at product-family level

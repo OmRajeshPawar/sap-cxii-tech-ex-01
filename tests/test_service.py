@@ -13,9 +13,11 @@ def test_api_contract():
         ok = client.get("/find_similar_products", params={"product_id": some_id, "num_similar": 5})
         assert ok.status_code == 200 and len(ok.json()) == 5 and some_id not in ok.json()
         assert client.get("/find_similar_products", params={"product_id": "nope"}).status_code == 404
-        for bad in ({"num_similar": 0}, {"num_similar": 101}, {"category_penalty": 2}, {"weights": "text=1"},
+        for bad in ({"num_similar": 0}, {"category_penalty": 2}, {"weights": "text=1"},
                     {"weights": "text:1,text:2"}, {"weights": "text:abc"}):
             assert client.get("/find_similar_products", params={"product_id": some_id, **bad}).status_code == 422
+        many = client.get("/find_similar_products", params={"product_id": some_id, "num_similar": 500}).json()
+        assert len(many) == len(set(many)) == 500 and some_id not in many   # no upper limit on num_similar
         assert client.get("/health").json() == {"status": "ok"}
         assert ok.headers["X-Model-Version"] and len(ok.headers["X-Request-ID"]) == 16
         assert client.get("/health", headers={"X-Request-ID": "abc123"}).headers["X-Request-ID"] == "abc123"

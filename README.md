@@ -6,9 +6,8 @@ on 30,000 Amazon fashion listings, served by FastAPI, shipped as a Docker image 
 
 ## Start here
 
-- **Interactive demo:** download the repository and open [docs/index.html](docs/index.html) in a browser. No server
-  needed: search or browse all 30,000 products, see each one's top 10 with its score breakdown, and compare it with the
-  text-only baseline. Photos load from the dataset's image links, so they need an internet connection.
+- **Interactive demo:** start the service ([Quick start](#quick-start)) and open <http://localhost:8000/>: search
+  the catalogue, choose how many results to show, see every score split by attribute and re-weight it live.
 - **Results:** [hand labels](results/human_check/human_eval.md) · [co-purchase evaluation](results/evaluation.md)
 - **Design decisions:** [DESIGN.md](DESIGN.md) · **Deployment and monitoring:** [OPERATIONS.md](OPERATIONS.md)
 - **Automated checks:** [GitHub Actions](https://github.com/OmRajeshPawar/sap-cxii-tech-ex-01/actions): tests, Docker build and
@@ -16,15 +15,17 @@ on 30,000 Amazon fashion listings, served by FastAPI, shipped as a Docker image 
 
 | | Text-only TF-IDF | Hand-set weights | **This model** |
 |---|---|---|---|
-| Results I labelled a real substitute (199 blind labels) | 87.3% | – | **96.8%** (+9.5, 95% CI [+3.5, +16.3]) |
-| Co-purchase nDCG@10, 6,561 held-out queries | 0.313 | 0.353 | **0.379** |
+| Results that are a real alternative (199 results checked by hand, blind to the system) | 87.3% | – | **96.8%** |
+| Top 10 contains a product shoppers actually bought (6,561 held-out products) | 56.2% | 61.1% | **64.4%** |
 | Latency, exact search over the full catalogue | | | **1.1 ms** in-process; **2.8 ms** p50 over HTTP from the Docker image on a 2-vCPU runner |
+
+Every measure is defined in plain English in [DESIGN.md](DESIGN.md#how-quality-is-measured).
 
 ![Demo: a product, its most similar products and a per-attribute breakdown of every score](results/demo.png)
 
 What sets it apart:
 
-- Photos are part of the served ranking: Marqo-FashionSigLIP embeddings for 29,861 products, compressed to 64 dimensions.
+- Photos are part of the served ranking: [Marqo-FashionSigLIP](https://huggingface.co/Marqo/marqo-fashionSigLIP) embeddings for 29,861 products, compressed to 64 dimensions.
 - Eight attribute blocks with weights learned from what shoppers bought, not set by hand.
 - A product-type penalty and one-listing-per-product rule, so a striped T-shirt returns T-shirts, not jeans or the same shirt in another size.
 - Every score splits exactly into per-attribute parts, and the weights can be changed per request.
@@ -56,7 +57,7 @@ curl "http://localhost:8000/find_similar_products?product_id=2852dde03bc410bd2c8
 ["0cfc707a5c527bd547cff0df356766b8","5331adbd8e70cd0a2b166ceafd105b1f","71641dc241d4cd9c18a5fb49689f515e","b0f213843a1e18b86ba31a39d2a44007","4c0f3ec946516d31867915dc8d5a5620"]
 ```
 
-`weights=` re-weights the attributes for one request, with no retraining. Here photo 0.6 and text 0.4 give a different list:
+`num_similar` is optional: it defaults to 10 and has no upper limit. `weights=` re-weights the attributes for one request, with no retraining. Here photo 0.6 and text 0.4 give a different list:
 
 ```bash
 curl "http://localhost:8000/find_similar_products?product_id=2852dde03bc410bd2c8cf09db9ff674c&num_similar=5&weights=image:0.6,text:0.4"
@@ -118,16 +119,16 @@ flowchart TD
 | Combined score, configurable weights, fallback | Learned weights, `?weights=` per request, empty blocks for missing data |
 | Design decisions and trade-offs | [DESIGN.md](DESIGN.md), [OPERATIONS.md](OPERATIONS.md) |
 
-**Bonus, HNSW** (Malkov & Yashunin, TPAMI 2020, [arXiv:1603.09320](https://arxiv.org/abs/1603.09320)) via FAISS:
+**Bonus, HNSW** (Malkov & Yashunin, TPAMI 2020, [arXiv:1603.09320](https://arxiv.org/abs/1603.09320)) via [FAISS](https://arxiv.org/abs/2401.08281):
 SVD to 256 dimensions, HNSW proposes 200 candidates, exact scores re-rank them. It returns 96.2% of the exact top 10.
 At 30,000 products exact search is already about a millisecond, so exact is the default and HNSW is one environment
 variable away for larger catalogues.
 
 ## Production
 
-Every response carries the model version (a hash of data, embeddings, weights and serving code) in
-`X-Model-Version`, and the same hash tags the image. An instance whose files don't match that hash reports itself
-degraded and `/ready` takes it out of rotation. `/metrics` exports Prometheus latency, error, coverage and
+Every response carries the model version (a hash of data, embeddings, weights, serving code and pinned library
+versions) in `X-Model-Version`, and the same hash tags the image. An instance whose files or installed libraries don't
+match that version reports itself degraded and `/ready` takes it out of rotation. `/metrics` exports Prometheus latency, error, coverage and
 wrong-type signals. The container runs as a non-root user, with a read-only root file system in Kubernetes. Rollout, rollback and the A/B
 plan are in [OPERATIONS.md](OPERATIONS.md).
 
