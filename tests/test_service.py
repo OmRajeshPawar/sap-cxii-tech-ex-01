@@ -60,6 +60,11 @@ def test_degraded_instance_stops_taking_traffic(monkeypatch):
         ready = client.get("/ready")
         assert ready.status_code == 503 and "model_config" in str(ready.json()["reasons"])
         assert client.get("/health").status_code == 200   # liveness stays up: no restart loop
+        # a missing or empty manifest: nothing mismatched, but nothing verified either
+        monkeypatch.setitem(service.STATE, "manifest", {"model_version": "x", "manifest_version": None, "verified": False,
+                                                        "mismatched": [], "missing": [], "dependencies": []})
+        ready = client.get("/ready")
+        assert ready.status_code == 503 and "manifest.json is missing" in str(ready.json()["reasons"])
 
 
 def test_demo_explanations_add_up_to_the_score():

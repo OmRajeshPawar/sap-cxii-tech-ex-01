@@ -86,10 +86,13 @@ def status() -> dict:
     coverage = float(engine.has_data[BLOCKS.index("image")].mean())
     manifest = STATE["manifest"]
     reasons = [f"image embeddings cover {coverage:.0%} of products (expected ~99.5%)"] if coverage < 0.9 else []
-    if manifest and (manifest.get("mismatched") or manifest.get("missing")):
-        reasons.append(f"artifacts differ from config/manifest.json: {manifest.get('mismatched') or manifest.get('missing')}")
-    if manifest and manifest.get("dependencies"):
-        reasons.append(f"installed libraries differ from requirements.txt: {manifest['dependencies']}")
+    if manifest and not manifest.get("verified"):   # anything short of a full verification takes the pod out of rotation
+        if manifest.get("mismatched") or manifest.get("missing"):
+            reasons.append(f"artifacts differ from config/manifest.json: {manifest.get('mismatched') or manifest.get('missing')}")
+        if manifest.get("dependencies"):
+            reasons.append(f"installed libraries differ from requirements.txt: {manifest['dependencies']}")
+        if not (manifest.get("mismatched") or manifest.get("missing") or manifest.get("dependencies")):
+            reasons.append("config/manifest.json is missing or lists no artifact hashes")
     with LOCK:
         lat = np.array(STATE["latency_ms"]) if STATE["latency_ms"] else None
         requests = dict(STATE["requests"])
