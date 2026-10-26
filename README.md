@@ -18,11 +18,13 @@ on 30,000 Amazon fashion listings, served by FastAPI, shipped as a Docker image 
 - **Automated checks:** [GitHub Actions](https://github.com/OmRajeshPawar/sap-cxii-tech-ex-01/actions): tests, Docker build and
   benchmark, Kubernetes deployment
 
-| | Text-only TF-IDF | Hand-set weights | **This model** |
+| Measure | Compared with | Baseline | **This model** |
 |---|---|---|---|
-| Results that are a real alternative (199 results checked by hand, blind to the system) | 87.3% | – | **96.8%** |
-| Top 10 contains an item its buyers also bought (6,561 held-out products) | 56.2% | 61.1% | **64.4%** |
-| Latency, exact search over the full catalogue | | | **1.1 ms** in-process; **2.8 ms** p50 over HTTP from the Docker image on a 2-vCPU runner |
+| Results that are a real alternative (199 results checked by hand, blind to the system) | Text-only TF-IDF | 87.3% | **96.8%** |
+| Top 10 contains an item its buyers also bought (6,561 held-out products) | Text-only TF-IDF | 56.2% | **64.4%** |
+| Top 10 contains an item its buyers also bought (same 6,561 products) | Hand-set weights | 61.1% | **64.4%** |
+
+Speed: **1.1 ms** per query in-process with exact search over the full catalogue; **2.8 ms** p50 over HTTP from the Docker image on a 2-vCPU runner.
 
 Every measure is defined in plain English in [DESIGN.md](DESIGN.md#how-quality-is-measured).
 
